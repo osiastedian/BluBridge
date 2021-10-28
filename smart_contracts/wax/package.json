@@ -1,0 +1,14 @@
+{
+  "name": "wax",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "node transfer-test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "eosjs": "^22.1.0",
+    "ethereumjs-util": "^7.1.3"
+  }
+}
