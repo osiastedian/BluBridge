@@ -4,24 +4,196 @@
     "types": [],
     "structs": [
         {
-            "name": "hi",
+            "name": "blu_item",
             "base": "",
             "fields": [
                 {
-                    "name": "nm",
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "time",
+                    "type": "uint32"
+                },
+                {
+                    "name": "account",
                     "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "chain_id",
+                    "type": "int8"
+                },
+                {
+                    "name": "eth_address",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "oracles",
+                    "type": "name[]"
+                },
+                {
+                    "name": "signatures",
+                    "type": "string[]"
+                },
+                {
+                    "name": "claimed",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "deposit_item",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "oracle_item",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "receipt_item",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "date",
+                    "type": "time_point_sec"
+                },
+                {
+                    "name": "ref",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "to",
+                    "type": "name"
+                },
+                {
+                    "name": "chain_id",
+                    "type": "uint8"
+                },
+                {
+                    "name": "confirmations",
+                    "type": "uint8"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "approvers",
+                    "type": "name[]"
+                },
+                {
+                    "name": "completed",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "send",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "chain_id",
+                    "type": "uint8"
+                },
+                {
+                    "name": "eth_address",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "sign",
+            "base": "",
+            "fields": [
+                {
+                    "name": "oracle_name",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "signature",
+                    "type": "string"
                 }
             ]
         }
     ],
     "actions": [
         {
-            "name": "hi",
-            "type": "hi",
+            "name": "send",
+            "type": "send",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "sign",
+            "type": "sign",
             "ricardian_contract": ""
         }
     ],
-    "tables": [],
+    "tables": [
+        {
+            "name": "blu",
+            "type": "blu_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "deposits",
+            "type": "deposit_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "oracles",
+            "type": "oracle_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "receipts",
+            "type": "receipt_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
     "kv_tables": {},
     "ricardian_clauses": [],
     "variants": [],
