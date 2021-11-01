@@ -81,6 +81,10 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 	// Constructor declaration
 	blubridge(name s, name code, datastream<const char *> ds);
 
+	// Registering Oracle
+	[[eosio::action]] void oraclereg( eosio::name oracle );
+	[[eosio::action]] void oracleunreg( eosio::name oracle );
+
 	[[eosio::action]] void send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address);
 	[[eosio::action]] void sign(eosio::name oracle_name, uint64_t id, std::string signature);
 

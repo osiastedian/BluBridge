@@ -8,6 +8,7 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
                                                                            receipts_(get_self(), get_self().value),
                                                                            bludata_(get_self(), get_self().value){}
 
+
 void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
     require_auth(from);
 
@@ -73,4 +74,25 @@ void blubridge::sign( eosio::name oracle_name, uint64_t id, std::string signatur
 void blubridge::require_oracle( eosio::name account) {
     require_auth(account);
     oracles_.get(account.value, "Account is not an oracle");
+}
+
+void blubridge::oraclereg( eosio::name oracle_name ){
+
+    require_auth(get_self());
+
+    check( is_account(oracle_name), "Oracle account does not exist");
+
+    oracles_.emplace(get_self(), [&](auto &o){
+        o.account = oracle_name;
+    });
+}
+
+void blubridge::oracleunreg( eosio::name oracle_name ){
+
+    require_auth(get_self());
+
+    auto oracle = oracles_.find(oracle_name.value);
+    check(oracle != oracles_.end(), "Oracle does not exist");
+
+    oracles_.erase(oracle);
 }

@@ -70,6 +70,26 @@
             ]
         },
         {
+            "name": "oraclereg",
+            "base": "",
+            "fields": [
+                {
+                    "name": "oracle",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "oracleunreg",
+            "base": "",
+            "fields": [
+                {
+                    "name": "oracle",
+                    "type": "name"
+                }
+            ]
+        },
+        {
             "name": "receipt_item",
             "base": "",
             "fields": [
@@ -153,6 +173,16 @@
         }
     ],
     "actions": [
+        {
+            "name": "oraclereg",
+            "type": "oraclereg",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "oracleunreg",
+            "type": "oracleunreg",
+            "ricardian_contract": ""
+        },
         {
             "name": "send",
             "type": "send",
