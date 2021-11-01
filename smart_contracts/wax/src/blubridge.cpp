@@ -3,33 +3,35 @@
 using namespace blu;
 using namespace eosio;
 
-blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> ds) : contract(s, code, ds),
-                                                                           oracles_(get_self(), get_self().value),
-                                                                           receipts_(get_self(), get_self().value),
-                                                                           bludata_(get_self(), get_self().value){
+blubridge::blubridge( eosio::name s, 
+		eosio::name code, datastream<const char *> ds) : contract(s, code, ds),
+		oracles_(get_self(), get_self().value),
+		receipts_(get_self(), get_self().value),
+		bludata_(get_self(), get_self().value)
+{
 
-																			// Initial creation of Symbol BLU
-																		    print("debugging account ", s);
+	// Initial creation of Symbol BLU
+	print("debugging account ", s);
 
-																			// Checking if blubridge account is already created
-																		    check( is_account(s), "Account does not exist");
-																		   //Create BLU Symbol
-																			auto sym = symbol("BLU", 4);
-																			auto maximum_supply = asset(210000000000, sym);
+	// Checking if blubridge account is already created
+	check( is_account(s), "Account does not exist");
+	//Create BLU Symbol
+	auto sym = symbol("BLU", 4);
+	auto maximum_supply = asset(210000000000, sym);
 
-																			// Record initial token information
-																			stats statstable( get_self(), sym.code().raw() );
-																			auto existing = statstable.find( sym.code().raw() );
-																			check( existing == statstable.end(), "token with symbol already exists" );
+	// Record initial token information
+	stats statstable( get_self(), sym.code().raw() );
+	auto existing = statstable.find( sym.code().raw() );
+	check( existing == statstable.end(), "token with symbol already exists" );
 
-																			statstable.emplace( get_self(), [&]( auto& ss ) {
-																				ss.supply.amount = 0;
-																				ss.supply.symbol = maximum_supply.symbol;
-																				ss.max_supply    = maximum_supply;
-																				ss.issuer        = s;
-																			});
+	statstable.emplace( get_self(), [&]( auto& ss ) {
+		ss.supply.amount = 0;
+		ss.supply.symbol = maximum_supply.symbol;
+		ss.max_supply    = maximum_supply;
+		ss.issuer        = s;
+	});
 
-																		   }
+}
 
 
 void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
