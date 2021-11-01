@@ -8,10 +8,16 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
                                                                            receipts_(get_self(), get_self().value),
                                                                            bludata_(get_self(), get_self().value){
 
+																			// Initial creation of Symbol BLU
+																		    print("debugging account ", s);
+
+																			// Checking if blubridge account is already created
+																		    check( is_account(s), "Account does not exist");
 																		   //Create BLU Symbol
-																			auto sym = symbol("BLU", 3);
+																			auto sym = symbol("BLU", 4);
 																			auto maximum_supply = asset(210000000000, sym);
 
+																			// Record initial token information
 																			stats statstable( get_self(), sym.code().raw() );
 																			auto existing = statstable.find( sym.code().raw() );
 																			check( existing == statstable.end(), "token with symbol already exists" );
@@ -33,10 +39,12 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
     check(quantity.amount > 0, "Amount cannot be negative");
     check(quantity.symbol.is_valid(), "Invalid symbol name");
 
+	//Modification, transfer token to self
 	transfer( quantity, "Amount transferred to self" );
 
     uint64_t next_send_id = bludata_.available_primary_key();
     uint32_t now = current_time_point().sec_since_epoch();
+	print(" send emplace");
     bludata_.emplace(from, [&](auto &t){
         t.id = next_send_id;
         t.time = now;
@@ -46,6 +54,8 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
         t.to_address = eth_address;
         t.claimed = false;
     });
+
+	print(" send function end");
 
 #if 0
     action(
@@ -127,13 +137,13 @@ void blubridge::transfer( const asset& quantity, const string& memo )
     check( quantity.is_valid(), "invalid quantity" );
     check( quantity.amount > 0, "must retire positive quantity" );
 
+	print(quantity.symbol, " ", st.supply.symbol);
+
     check( quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
 
     statstable.modify( st, same_payer, [&]( auto& s ) {
        s.supply -= quantity;
     });
 
-	// Wala pa ni sure
-	// Issuer is the smart contract itself
-    //add_contract_balance( st.issuer, quantity );
+	print("Transfer completed");
 }

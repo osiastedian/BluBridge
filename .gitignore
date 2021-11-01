@@ -281,3 +281,6 @@ smart_contracts/wax/build/test/CMakeFiles/blubridge_test.dir/progress.make
 smart_contracts/wax/build/test/CMakeFiles/Progress/1
 smart_contracts/wax/build/test/CMakeFiles/Progress/count.txt
 CTestTestfile.cmake
+smart_contracts/wax/test/nodeos.log
+smart_contracts/wax/test/wallet
+smart_contracts/wax/test/wallet.info

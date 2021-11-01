@@ -4,6 +4,16 @@
     "types": [],
     "structs": [
         {
+            "name": "account",
+            "base": "",
+            "fields": [
+                {
+                    "name": "balance",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
             "name": "blu_item",
             "base": "",
             "fields": [
@@ -28,7 +38,7 @@
                     "type": "int8"
                 },
                 {
-                    "name": "eth_address",
+                    "name": "to_address",
                     "type": "checksum256"
                 },
                 {
@@ -46,16 +56,20 @@
             ]
         },
         {
-            "name": "deposit_item",
+            "name": "currency_stats",
             "base": "",
             "fields": [
                 {
-                    "name": "account",
-                    "type": "name"
+                    "name": "supply",
+                    "type": "asset"
                 },
                 {
-                    "name": "quantity",
+                    "name": "max_supply",
                     "type": "asset"
+                },
+                {
+                    "name": "issuer",
+                    "type": "name"
                 }
             ]
         },
@@ -65,26 +79,6 @@
             "fields": [
                 {
                     "name": "account",
-                    "type": "name"
-                }
-            ]
-        },
-        {
-            "name": "oraclereg",
-            "base": "",
-            "fields": [
-                {
-                    "name": "oracle",
-                    "type": "name"
-                }
-            ]
-        },
-        {
-            "name": "oracleunreg",
-            "base": "",
-            "fields": [
-                {
-                    "name": "oracle",
                     "type": "name"
                 }
             ]
@@ -132,6 +126,16 @@
             ]
         },
         {
+            "name": "regoracle",
+            "base": "",
+            "fields": [
+                {
+                    "name": "oracle",
+                    "type": "name"
+                }
+            ]
+        },
+        {
             "name": "send",
             "base": "",
             "fields": [
@@ -170,17 +174,22 @@
                     "type": "string"
                 }
             ]
+        },
+        {
+            "name": "unregoracle",
+            "base": "",
+            "fields": [
+                {
+                    "name": "oracle",
+                    "type": "name"
+                }
+            ]
         }
     ],
     "actions": [
         {
-            "name": "oraclereg",
-            "type": "oraclereg",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "oracleunreg",
-            "type": "oracleunreg",
+            "name": "regoracle",
+            "type": "regoracle",
             "ricardian_contract": ""
         },
         {
@@ -192,19 +201,24 @@
             "name": "sign",
             "type": "sign",
             "ricardian_contract": ""
+        },
+        {
+            "name": "unregoracle",
+            "type": "unregoracle",
+            "ricardian_contract": ""
         }
     ],
     "tables": [
         {
-            "name": "blu",
-            "type": "blu_item",
+            "name": "accounts",
+            "type": "account",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
         },
         {
-            "name": "deposits",
-            "type": "deposit_item",
+            "name": "blu",
+            "type": "blu_item",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
@@ -219,6 +233,13 @@
         {
             "name": "receipts",
             "type": "receipt_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "stat",
+            "type": "currency_stats",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
