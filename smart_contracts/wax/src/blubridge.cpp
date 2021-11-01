@@ -1,12 +1,29 @@
 #include <blubridge.hpp>
 
 using namespace blu;
+using namespace eosio;
 
 blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> ds) : contract(s, code, ds),
-                                                                           deposits_(get_self(), get_self().value),
                                                                            oracles_(get_self(), get_self().value),
                                                                            receipts_(get_self(), get_self().value),
-                                                                           bludata_(get_self(), get_self().value){}
+                                                                           bludata_(get_self(), get_self().value){
+
+																		   //Create BLU Symbol
+																			auto sym = symbol("BLU", 3);
+																			auto maximum_supply = asset(210000000000, sym);
+
+																			stats statstable( get_self(), sym.code().raw() );
+																			auto existing = statstable.find( sym.code().raw() );
+																			check( existing == statstable.end(), "token with symbol already exists" );
+
+																			statstable.emplace( get_self(), [&]( auto& ss ) {
+																				ss.supply.amount = 0;
+																				ss.supply.symbol = maximum_supply.symbol;
+																				ss.max_supply    = maximum_supply;
+																				ss.issuer        = s;
+																			});
+
+																		   }
 
 
 void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
@@ -15,21 +32,8 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
     check(quantity.is_valid(), "Amount is not valid");
     check(quantity.amount > 0, "Amount cannot be negative");
     check(quantity.symbol.is_valid(), "Invalid symbol name");
-    check(quantity.amount >= 100'0000, "Transfer is below minimum of 100 TLM");
 
-    auto deposit = deposits_.find(from.value);
-    check(deposit != deposits_.end(), "Deposit not found, please transfer the tokens first");
-    check(deposit->quantity >= quantity, "Not enough deposited");
-
-    // tokens owned by this contract are inaccessible so just remove the deposit record
-    if (deposit->quantity == quantity){
-        deposits_.erase(deposit);
-    }
-    else {
-        deposits_.modify(*deposit, same_payer, [&](auto &d){
-            d.quantity -= quantity;
-        });
-    }
+	transfer( quantity, "Amount transferred to self" );
 
     uint64_t next_send_id = bludata_.available_primary_key();
     uint32_t now = current_time_point().sec_since_epoch();
@@ -39,7 +43,7 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
         t.account = from;
         t.quantity = quantity;
         t.chain_id = chain_id;
-        t.eth_address = eth_address;
+        t.to_address = eth_address;
         t.claimed = false;
     });
 
@@ -76,7 +80,7 @@ void blubridge::require_oracle( eosio::name account) {
     oracles_.get(account.value, "Account is not an oracle");
 }
 
-void blubridge::oraclereg( eosio::name oracle_name ){
+void blubridge::regoracle( eosio::name oracle_name ){
 
     require_auth(get_self());
 
@@ -87,7 +91,7 @@ void blubridge::oraclereg( eosio::name oracle_name ){
     });
 }
 
-void blubridge::oracleunreg( eosio::name oracle_name ){
+void blubridge::unregoracle( eosio::name oracle_name ){
 
     require_auth(get_self());
 
@@ -95,4 +99,41 @@ void blubridge::oracleunreg( eosio::name oracle_name ){
     check(oracle != oracles_.end(), "Oracle does not exist");
 
     oracles_.erase(oracle);
+}
+
+void blubridge::add_contract_balance( const name& owner, const asset& value ) {
+   accounts contract_acnt( get_self(), owner.value );
+
+   const auto& from = contract_acnt.get( value.symbol.code().raw(), "no balance object found" );
+   check( from.balance.amount >= value.amount, "overdrawn balance" );
+
+   contract_acnt.modify( from, owner,  [&]( auto& a ) {
+         a.balance += value;
+      });
+}
+
+void blubridge::transfer( const asset& quantity, const string& memo )
+{
+    auto sym = quantity.symbol;
+    check( sym.is_valid(), "invalid symbol name" );
+    check( memo.size() <= 256, "memo has more than 256 bytes" );
+
+    stats statstable( get_self(), sym.code().raw() );
+    auto existing = statstable.find( sym.code().raw() );
+    check( existing != statstable.end(), "token with symbol does not exist" );
+    const auto& st = *existing;
+
+    require_auth( st.issuer );
+    check( quantity.is_valid(), "invalid quantity" );
+    check( quantity.amount > 0, "must retire positive quantity" );
+
+    check( quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
+
+    statstable.modify( st, same_payer, [&]( auto& s ) {
+       s.supply -= quantity;
+    });
+
+	// Wala pa ni sure
+	// Issuer is the smart contract itself
+    //add_contract_balance( st.issuer, quantity );
 }
