@@ -87,9 +87,6 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		blu_table		  bludata_;;
 
 		void require_oracle( eosio::name account );
-		void regtoken( eosio::name tokenowner, eosio::asset quantity );
-		void add_contract_balance( const name& owner, const asset& value );
-		void transfer( const asset& quantity, const string& memo );
 
 	public:
 		using contract::contract;

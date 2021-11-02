@@ -284,3 +284,4 @@ CTestTestfile.cmake
 smart_contracts/wax/test/nodeos.log
 smart_contracts/wax/test/wallet
 smart_contracts/wax/test/wallet.info
+eosio_token

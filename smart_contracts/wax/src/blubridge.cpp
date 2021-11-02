@@ -23,17 +23,18 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
 	print("starting transfer to external contract");
 	//Modification, transfer token to self
 	//Test call inline function to eosio.token contract
-	token::transfer_action instance( "eosio.token"_n, { "eosio.token"_n, "active"_n});
+	token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
 
 	//send() command links to external contract
-	instance.send( get_self(), "eosio.token"_n, quantity, "Amount transferred to self" );
+	transfer.send( get_self(), "eosio.token"_n, quantity, "Amount transferred to self" );
 	print("external contract transfer completed");
 
-    uint64_t next_send_id = bludata_.available_primary_key();
+    uint64_t transaction_id = bludata_.available_primary_key();
+	print_f("transaction_id[%]", transaction_id );
     uint32_t now = current_time_point().sec_since_epoch();
 	print(" send emplace");
     bludata_.emplace(from, [&](auto &t){
-        t.id = next_send_id;
+        t.id = transaction_id;
         t.time = now;
         t.account = from;
         t.quantity = quantity;
@@ -48,7 +49,7 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
     action(
         permission_level{get_self(), "active"_n},
         get_self(), "logteleport"_n,
-        make_tuple(next_send_id, now, from, quantity, chain_id, eth_address)
+        make_tuple(transaction_id, now, from, quantity, chain_id, eth_address)
     ).send();
 #endif
 
@@ -63,6 +64,10 @@ void blubridge::sign( eosio::name oracle_name, uint64_t id, std::string signatur
 	check(blu != bludata_.end(), "Send item not found");
 
 	auto find_res = std::find(blu->oracles.begin(), blu->oracles.end(), oracle_name);
+
+	//TODO: add checking if valid signature
+	//
+
 	check(find_res == blu->oracles.end(), "Oracle has already signed");
 
 	bludata_.modify(*blu, get_self(), [&](auto &t){
@@ -96,41 +101,4 @@ void blubridge::unregoracle( eosio::name oracle_name ){
     check(oracle != oracles_.end(), "Oracle does not exist");
 
     oracles_.erase(oracle);
-}
-
-void blubridge::add_contract_balance( const name& owner, const asset& value ) {
-   accounts contract_acnt( get_self(), owner.value );
-
-   const auto& from = contract_acnt.get( value.symbol.code().raw(), "no balance object found" );
-   check( from.balance.amount >= value.amount, "overdrawn balance" );
-
-   contract_acnt.modify( from, owner,  [&]( auto& a ) {
-         a.balance += value;
-      });
-}
-
-void blubridge::transfer( const asset& quantity, const string& memo )
-{
-    auto sym = quantity.symbol;
-    check( sym.is_valid(), "invalid symbol name" );
-    check( memo.size() <= 256, "memo has more than 256 bytes" );
-
-    stats statstable( get_self(), sym.code().raw() );
-    auto existing = statstable.find( sym.code().raw() );
-    check( existing != statstable.end(), "token with symbol does not exist" );
-    const auto& st = *existing;
-
-    require_auth( st.issuer );
-    check( quantity.is_valid(), "invalid quantity" );
-    check( quantity.amount > 0, "must retire positive quantity" );
-
-	print(quantity.symbol, " ", st.supply.symbol);
-
-    check( quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
-
-    statstable.modify( st, same_payer, [&]( auto& s ) {
-       s.supply -= quantity;
-    });
-
-	print("Transfer completed");
 }
