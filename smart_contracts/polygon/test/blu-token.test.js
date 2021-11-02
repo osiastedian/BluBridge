@@ -1,10 +1,5 @@
-const BluToken = artifacts.require("BluToken");
+const BluToken = artifacts.require("BluDacToken");
 contract("BluDacToken", (accounts) => {
-  it("should be deployed", async () => {
-    const instance = await BluToken.deployed();
-    console.log({ instance });
-  });
-
   it("should be able to mint", async () => {
     const instance = await BluToken.deployed();
     const minterRole = await instance.MINTER_ROLE();

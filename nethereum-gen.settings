@@ -1,0 +1,7 @@
+{
+    "projectName": "BluBridge",
+    "namespace": "BluBridge.Contracts",
+    "lang": 0,
+    "autoCodeGen": true,
+    "projectPath": "../"
+}
