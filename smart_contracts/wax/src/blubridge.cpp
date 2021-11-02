@@ -1,4 +1,5 @@
 #include <blubridge.hpp>
+#include "eosio.token/eosio.token.hpp"
 
 using namespace blu;
 using namespace eosio;
@@ -8,30 +9,7 @@ blubridge::blubridge( eosio::name s,
 		oracles_(get_self(), get_self().value),
 		receipts_(get_self(), get_self().value),
 		bludata_(get_self(), get_self().value)
-{
-
-	// Initial creation of Symbol BLU
-	print("debugging account ", s);
-
-	// Checking if blubridge account is already created
-	check( is_account(s), "Account does not exist");
-	//Create BLU Symbol
-	auto sym = symbol("BLU", 4);
-	auto maximum_supply = asset(210000000000, sym);
-
-	// Record initial token information
-	stats statstable( get_self(), sym.code().raw() );
-	auto existing = statstable.find( sym.code().raw() );
-	check( existing == statstable.end(), "token with symbol already exists" );
-
-	statstable.emplace( get_self(), [&]( auto& ss ) {
-		ss.supply.amount = 0;
-		ss.supply.symbol = maximum_supply.symbol;
-		ss.max_supply    = maximum_supply;
-		ss.issuer        = s;
-	});
-
-}
+{}
 
 
 void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
@@ -41,8 +19,15 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
     check(quantity.amount > 0, "Amount cannot be negative");
     check(quantity.symbol.is_valid(), "Invalid symbol name");
 
+
+	print("starting transfer to external contract");
 	//Modification, transfer token to self
-	transfer( quantity, "Amount transferred to self" );
+	//Test call inline function to eosio.token contract
+	token::transfer_action instance( "eosio.token"_n, { "eosio.token"_n, "active"_n});
+
+	//send() command links to external contract
+	instance.send( get_self(), "eosio.token"_n, quantity, "Amount transferred to self" );
+	print("external contract transfer completed");
 
     uint64_t next_send_id = bludata_.available_primary_key();
     uint32_t now = current_time_point().sec_since_epoch();
