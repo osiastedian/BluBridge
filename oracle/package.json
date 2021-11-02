@@ -1,0 +1,10 @@
+{
+  "name": "oracle",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "run:eos": "node eos-oracle.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
