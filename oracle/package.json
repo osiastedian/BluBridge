@@ -3,8 +3,22 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "run:eos": "node eos-oracle.js"
+    "eos": "node eos-oracle.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/client": "^3.4.16",
+    "@dfuse/client": "^0.3.20",
+    "@eosdacio/eosio-statereceiver": "^1.1.1",
+    "add": "^2.0.6",
+    "eosjs": "^22.1.0",
+    "graphql": "^16.0.1",
+    "graphql-ws": "^5.5.5",
+    "node-fetch": "^3.0.0",
+    "web3": "^1.6.0",
+    "ws": "^8.2.3",
+    "yarn": "^1.22.17"
+  },
+  "type": "module"
 }
