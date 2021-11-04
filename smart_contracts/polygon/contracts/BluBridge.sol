@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 abstract contract BridgeERC20 is ERC20Burnable {
@@ -12,7 +13,7 @@ abstract contract BridgeERC20 is ERC20Burnable {
 }
 
 struct TransferData {
-    uint64 id;
+    uint256 id;
     uint256 amount;
     uint8 chainId;
     address tokenAddress;
@@ -20,27 +21,34 @@ struct TransferData {
 }
 
 struct SendTransferData {
+    uint256 id;
     uint256 amount;
     uint8 chainId;
     bytes32 toAddress;
     address tokenContractAddress;
+    bool claimed;
 }
 
 contract TokenBridge is AccessControl {
     using ECDSA for bytes32;
     using Address for address;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
 
     event RegisterToken(address indexed tokenAddress);
     event UnregisterToken(address indexed tokenAddress);
+    event RegisterChainId(uint8 recepientChainId);
+    event UnregisterChainId(uint8 recepientChainId);
     event Claimed(
         uint256 indexed id,
         address indexed toAddress,
         uint256 amount
     );
+
     event Sent(
-        address indexed tokenContractAddress,
+        uint256 id,
+        address fromAddress,
         uint256 amount,
-        uint8 chainId,
+        uint8 toChainId,
         bytes32 toAddress
     );
 
@@ -51,6 +59,10 @@ contract TokenBridge is AccessControl {
     mapping(uint256 => TransferData) public tansferMap;
     mapping(address => bool) public supportedTokens;
     mapping(uint8 => bool) public supportedChainIds;
+
+    mapping(uint256 => SendTransferData) public sendTransferMap;
+    mapping(uint256 => mapping(address => bool)) signatureLookup;
+    mapping(uint256 => EnumerableSet.Bytes32Set) sendTransferSignatures;
 
     constructor(uint8 _chainId) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -74,6 +86,21 @@ contract TokenBridge is AccessControl {
         );
         supportedTokens[tokenContractAddress] = false;
         emit UnregisterToken(tokenContractAddress);
+    }
+
+    function registerChainId(uint8 recepientChainId) public {
+        require(
+            !supportedChainIds[recepientChainId],
+            "ChainId already supported"
+        );
+        supportedChainIds[recepientChainId] = true;
+        emit RegisterChainId(recepientChainId);
+    }
+
+    function ungisterChainId(uint8 recepientChainId) public {
+        require(supportedChainIds[recepientChainId], "ChainId not supported");
+        supportedChainIds[recepientChainId] = false;
+        emit UnregisterChainId(recepientChainId);
     }
 
     function _extractTransferData(bytes memory data)
@@ -103,18 +130,49 @@ contract TokenBridge is AccessControl {
         uint256 amount,
         uint8 toChainId,
         bytes32 toAddress
-    ) public {
+    ) public returns (uint256) {
         require(tokenContractAddress.isContract(), "Address is not a contract");
         require(
             supportedTokens[tokenContractAddress],
             "Token is not supported"
         );
-        require(supportedChainIds[chainId], "Not Supported Chain ID");
+        require(supportedChainIds[toChainId], "Not Supported Chain ID");
 
         BridgeERC20 erc20 = BridgeERC20(tokenContractAddress);
         erc20.burnFrom(msg.sender, amount);
 
-        emit Sent(tokenContractAddress, amount, toChainId, toAddress);
+        uint256 id = block.number;
+        sendTransferMap[id] = SendTransferData({
+            id: id,
+            amount: amount,
+            chainId: toChainId,
+            toAddress: toAddress,
+            tokenContractAddress: tokenContractAddress,
+            claimed: false
+        });
+
+        emit Sent(id, msg.sender, amount, toChainId, toAddress);
+        return id;
+    }
+
+    function getSignatures(uint256 sendId)
+        public
+        view
+        returns (bytes32[] memory)
+    {
+        require(sendTransferMap[sendId].id != 0, "Send Id does not exist");
+        return sendTransferSignatures[sendId].values();
+    }
+
+    function sign(uint256 sendId, bytes32 signature)
+        public
+        onlyRole(ORACLE_ROLE)
+    {
+        require(sendTransferMap[sendId].id != 0, "Send Id does not exist");
+        require(!signatureLookup[sendId][msg.sender], "Oracle already signed");
+
+        sendTransferSignatures[sendId].add(signature);
+        signatureLookup[sendId][msg.sender] = true;
     }
 
     function claim(bytes memory data, bytes[] calldata signatures) public {
