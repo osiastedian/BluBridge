@@ -22,6 +22,7 @@ const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 const fs = require("fs");
 const mnemonic = fs.readFileSync(".secret").toString().trim();
+const privateKey = fs.readFileSync('.privatekey').toString().trim();
 
 module.exports = {
   /**
@@ -46,9 +47,9 @@ module.exports = {
     //   port: 8545, // Standard Ethereum port (default: none)
     //   network_id: "*", // Any network (default: none)
     // },
-    matic: {
+    maticTestnet: {
       provider: () =>
-        new HDWalletProvider(mnemonic, `https://rpc-mumbai.maticvigil.com`),
+        new HDWalletProvider([privateKey], `https://rpc-mumbai.maticvigil.com`),
       network_id: 80001,
       confirmations: 2,
       timeoutBlocks: 200,
@@ -96,4 +97,7 @@ module.exports = {
   //   }
   // }
   // }
+  plugins: [
+    'truffle-plugin-verify'
+  ]
 };
