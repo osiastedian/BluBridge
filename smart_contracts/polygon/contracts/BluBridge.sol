@@ -2,13 +2,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-abstract contract MintableERC20 is ERC20 {
+abstract contract BridgeERC20 is ERC20Burnable {
     function mint(address account, uint256 amount) public virtual;
 }
 
@@ -18,6 +17,13 @@ struct TransferData {
     uint8 chainId;
     address tokenAddress;
     address toAddress;
+}
+
+struct SendTransferData {
+    uint256 amount;
+    uint8 chainId;
+    bytes32 toAddress;
+    address tokenContractAddress;
 }
 
 contract TokenBridge is AccessControl {
@@ -31,6 +37,12 @@ contract TokenBridge is AccessControl {
         address indexed toAddress,
         uint256 amount
     );
+    event Sent(
+        address indexed tokenContractAddress,
+        uint256 amount,
+        uint8 chainId,
+        bytes32 toAddress
+    );
 
     bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
     uint256 public minimumOracleConfirmations = 3;
@@ -38,6 +50,7 @@ contract TokenBridge is AccessControl {
 
     mapping(uint256 => TransferData) public tansferMap;
     mapping(address => bool) public supportedTokens;
+    mapping(uint8 => bool) public supportedChainIds;
 
     constructor(uint8 _chainId) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -85,6 +98,25 @@ contract TokenBridge is AccessControl {
         });
     }
 
+    function send(
+        address tokenContractAddress,
+        uint256 amount,
+        uint8 toChainId,
+        bytes32 toAddress
+    ) public {
+        require(tokenContractAddress.isContract(), "Address is not a contract");
+        require(
+            supportedTokens[tokenContractAddress],
+            "Token is not supported"
+        );
+        require(supportedChainIds[chainId], "Not Supported Chain ID");
+
+        BridgeERC20 erc20 = BridgeERC20(tokenContractAddress);
+        erc20.burnFrom(msg.sender, amount);
+
+        emit Sent(tokenContractAddress, amount, toChainId, toAddress);
+    }
+
     function claim(bytes memory data, bytes[] calldata signatures) public {
         bytes32 message = keccak256(data);
         bytes32 hashed = message.toEthSignedMessageHash();
@@ -109,7 +141,7 @@ contract TokenBridge is AccessControl {
         );
         require(transferData.toAddress == msg.sender, "Not eligible for claim");
 
-        MintableERC20 erc20 = MintableERC20(transferData.tokenAddress);
+        BridgeERC20 erc20 = BridgeERC20(transferData.tokenAddress);
         erc20.mint(transferData.toAddress, transferData.amount);
 
         emit Claimed(
