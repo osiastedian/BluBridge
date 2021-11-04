@@ -12,7 +12,7 @@ blubridge::blubridge( eosio::name s,
 {}
 
 
-void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
+void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address, eosio::checksum256 tokenAddress) {
     require_auth(from);
 
     check(quantity.is_valid(), "Amount is not valid");
@@ -41,6 +41,7 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
         t.chain_id = chain_id;
         t.to_address = eth_address;
         t.claimed = false;
+        t.tokenAddress = tokenAddress;
     });
 
 	print(" send function end");
@@ -49,7 +50,7 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
     action(
         permission_level{get_self(), "active"_n},
         get_self(), "logteleport"_n,
-        make_tuple(transaction_id, now, from, quantity, chain_id, eth_address)
+        make_tuple(transaction_id, now, from, quantity, chain_id, eth_address, tokenAddress)
     ).send();
 #endif
 

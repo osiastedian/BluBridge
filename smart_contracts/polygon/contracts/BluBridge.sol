@@ -16,15 +16,15 @@ struct TransferData {
     uint256 id;
     uint256 amount;
     uint8 chainId;
-    address tokenAddress;
-    address toAddress;
+    bytes32 tokenAddress;
+    bytes32 toAddress;
 }
 
 struct SendTransferData {
     uint256 id;
     uint256 amount;
     uint8 chainId;
-    bytes32 toAddress;
+    address toAddress;
     address tokenContractAddress;
     bool claimed;
 }
@@ -112,9 +112,9 @@ contract TokenBridge is AccessControl {
             uint64 id,
             uint256 amount,
             uint8 toChainId,
-            address tokenAddress,
-            address toAddress
-        ) = abi.decode(data, (uint64, uint256, uint8, address, address));
+            bytes32 tokenAddress,
+            bytes32 toAddress
+        ) = abi.decode(data, (uint64, uint256, uint8, bytes32, bytes32));
 
         transferData = TransferData({
             id: id,
@@ -175,7 +175,12 @@ contract TokenBridge is AccessControl {
         signatureLookup[sendId][msg.sender] = true;
     }
 
-    function claim(bytes memory data, bytes[] calldata signatures) public {
+    function claim(
+        address tokenAddress, //
+        address toAddress, // asset quantity `0.001 TNT`
+        bytes memory data, // hashed
+        bytes[] calldata signatures
+    ) public {
         bytes32 message = keccak256(data);
         bytes32 hashed = message.toEthSignedMessageHash();
         uint8 validSignatures;
@@ -194,18 +199,22 @@ contract TokenBridge is AccessControl {
         TransferData memory transferData = _extractTransferData(data);
 
         require(
-            supportedTokens[transferData.tokenAddress],
-            "Unsupported token address"
+            keccak256(tokenAddress) == transferData.tokenAddress,
+            "Invalid token address"
         );
-        require(transferData.toAddress == msg.sender, "Not eligible for claim");
 
-        BridgeERC20 erc20 = BridgeERC20(transferData.tokenAddress);
-        erc20.mint(transferData.toAddress, transferData.amount);
+        require(supportedTokens[tokenAddress], "Unsupported token address");
 
-        emit Claimed(
-            transferData.id,
-            transferData.toAddress,
-            transferData.amount
+        require(
+            keccak256(toAddress) == transferData.toAddress,
+            "Invalid token address"
         );
+
+        require(toAddress == msg.sender, "Not eligible for claim");
+
+        BridgeERC20 erc20 = BridgeERC20(tokenAddress);
+        erc20.mint(toAddress, transferData.amount);
+
+        emit Claimed(transferData.id, toAddress, transferData.amount);
     }
 }

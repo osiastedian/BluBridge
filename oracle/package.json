@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "eos": "node eos-oracle.js"
+    "eos": "node eos-oracle.js",
+    "polygon": "node polygon-oracle.js"
   },
   "author": "",
   "license": "ISC",
@@ -11,8 +12,10 @@
     "@apollo/client": "^3.4.16",
     "@dfuse/client": "^0.3.20",
     "@eosdacio/eosio-statereceiver": "^1.1.1",
+    "@maticnetwork/dagger": "^0.2.0",
     "add": "^2.0.6",
     "eosjs": "^22.1.0",
+    "eosjs-ecc": "^4.0.7",
     "graphql": "^16.0.1",
     "graphql-ws": "^5.5.5",
     "node-fetch": "^3.0.0",
