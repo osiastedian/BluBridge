@@ -3,32 +3,29 @@ import { Api, JsonRpc } from "eosjs";
 import fetch from "node-fetch";
 import Web3 from "web3";
 import { createDfuseClient } from "@dfuse/client";
-
 import { JsSignatureProvider } from "eosjs/dist/eosjs-jssig.js"; // development only
+import dotenv from "dotenv";
+dotenv.config();
 
-const bridgeContract = "bvctvozrlgrg";
-const logsendAction = "logsend";
-const oracleAccount = "atyqxmszvnsk";
-const privateKeys = ["5K5fQ4RUVnZmcHxCFE8LgLMJtGkCCHobGYdfMbgF5uv3KJszRiD"];
+const bridgeContract = process.env.EOS_CONTRACT_ACCOUNT;
+const logsendAction = process.env.EOS_CONTRACT_ACTION_LOGSEND;
+const signAction = process.env.EOS_CONTRACT_ACTION_SIGN;
+const oracleAccount = process.env.ORACLE_EOS_ACCOUNT;
 
-const ethAddress = "0xb6415b4fAC8A27334FD5a09F9457E110f3eE86eb";
-const web3Api = "ws://localhost:8545";
+const ethAddress = process.env.ORACLE_POLYGON_ADDRESS;
 
-const web3 = new Web3(web3Api);
+const web3 = new Web3(process.env.POLYGON_API_ENDPOINT);
 
-const signatureProvider = new JsSignatureProvider(privateKeys);
-const rpc = new JsonRpc("https://api.testnet.eos.io/", { fetch }); //required to read blockchain state
+const signatureProvider = new JsSignatureProvider([
+  process.env.ORACLE_EOS_PRIVATE_KEY,
+]);
+const rpc = new JsonRpc(process.env.EOS_API_ENDPOINT, { fetch }); //required to read blockchain state
 const api = new Api({ rpc, signatureProvider }); //required to submit transactions
 
 global.fetch = fetch;
 global.WebSocket = WebSocket;
 
-const symbolToEthAddressMap = {
-  TNT: {
-    address: "0xe0cbf38a0c610113379c086dc79ccaaf1eb5c20b",
-    decimals: 6,
-  },
-};
+const symbolToEthAddressMap = require(process.env.EOS_SYMBOL_TOKEN_ADDRESS_MAO);
 
 const registerSignature = (id, signature) =>
   api.transact(
@@ -36,7 +33,7 @@ const registerSignature = (id, signature) =>
       actions: [
         {
           account: bridgeContract,
-          name: "sign",
+          name: signAction,
           authorization: [
             {
               actor: oracleAccount,
@@ -114,11 +111,11 @@ const streamTransfer = `subscription ($query: String!, $cursor: String, $limit: 
 
 const run = async () => {
   const client = createDfuseClient({
-    apiKey: "server_9c7c311de0cdd3799955ea2eb6eda910",
-    network: "testnet.eos.dfuse.io",
+    apiKey: process.env.DFUSE_API_KEY,
+    network: process.env.DFUSE_NETWORK,
   });
 
-  console.log("Staring EOS Oracle");
+  console.log(`Starting EOS Oracle: ${oracleAccount}`);
 
   await client.graphql(
     streamTransfer,
@@ -133,9 +130,7 @@ const run = async () => {
         console.log("cursor", data.cursor);
 
         actions.forEach((action) => {
-          const { from, to, quantity, memo, to_address, token_address } =
-            action.json;
-          console.log(action);
+          const { quantity, memo, to_address } = action.json;
           const id = action.json.id;
           const chainId = action.json.chain_id;
           const padding = "000000000000000000000000";
@@ -151,7 +146,6 @@ const run = async () => {
             amount: amount * `1e${token.decimals}`,
             tokenAddress: token.address,
           };
-          console.log("RAW DATA", rawData);
           generateEthSignature(rawData)
             .then((signature) => registerSignature(id, signature))
             .then((result) => console.log("Successful sign: \n", result));
