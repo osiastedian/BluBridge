@@ -25,9 +25,15 @@ contract("Bridge", (accounts) => {
     const minterRole = await bluToken.MINTER_ROLE();
     await bluToken.grantRole(minterRole, bridge.address);
     const oracleRole = await bridge.ORACLE_ROLE();
-    await bridge.grantRole(oracleRole, accounts[1]);
-    await bridge.grantRole(oracleRole, accounts[2]);
-    await bridge.grantRole(oracleRole, accounts[3]);
+    const oracle1 = web3.eth.accounts.create();
+    const oracle2 = web3.eth.accounts.create();
+    const oracle3 = web3.eth.accounts.create();
+    await bridge.grantRole(oracleRole, oracle1.address);
+    await bridge.grantRole(oracleRole, oracle2.address);
+    await bridge.grantRole(oracleRole, oracle3.address);
+
+    const userAccount = web3.eth.accounts.create();
+
     const encoded = web3.eth.abi.encodeParameter(
       {
         ParentStruct: {
@@ -48,26 +54,23 @@ contract("Bridge", (accounts) => {
     );
 
     const hashed = web3.utils.sha3(encoded);
-    const createSignature = async (data, signer) =>
-      web3.eth
-        .sign(data, signer)
-        .then(
-          (signature) =>
-            signature.substr(0, 130) +
-            (signature.substr(130) == "00" ? "1b" : "1c")
-        );
 
-    const signatures = await Promise.all([
-      createSignature(hashed, accounts[1]),
-      createSignature(hashed, accounts[2]),
-      createSignature(hashed, accounts[3]),
-    ]);
+    const signatures = [
+      oracle1.sign(hashed).signature,
+      oracle2.sign(hashed).signature,
+      oracle3.sign(hashed).signature,
+    ];
 
     // Act
 
-    const claimedTx = await bridge.claim(encoded, signatures, {
-      from: accounts[4],
-    });
+    const claimedTx = await bridge.claim(
+      bluToken.address,
+      encoded,
+      signatures,
+      {
+        from: accounts[4],
+      }
+    );
 
     // Assert
     const balance = await bluToken.balanceOf(accounts[4]);

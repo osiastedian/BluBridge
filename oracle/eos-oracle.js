@@ -18,9 +18,12 @@ const bridgeContract = process.env.EOS_CONTRACT_ACCOUNT;
 const logsendAction = process.env.EOS_CONTRACT_ACTION_LOGSEND;
 const signAction = process.env.EOS_CONTRACT_ACTION_SIGN;
 const oracleAccount = process.env.ORACLE_EOS_ACCOUNT;
-const ethAddress = process.env.ORACLE_POLYGON_ADDRESS;
 
 const web3 = new Web3(process.env.POLYGON_API_ENDPOINT);
+
+const account = web3.eth.accounts.privateKeyToAccount(
+  process.env.ORACLE_POLYGON_PRIVATE_KEY
+);
 
 const signatureProvider = new JsSignatureProvider([
   process.env.ORACLE_EOS_PRIVATE_KEY,
@@ -41,8 +44,15 @@ const dfuseClientOptions = {
   network: process.env.DFUSE_NETWORK,
 };
 
-const registerSignature = (id, signature) =>
-  api.transact(
+LOG('CONFIG:', {
+  ethAddress: account.address,
+  dfuseClientOptions,
+  polygonApiEndpoint: process.env.POLYGON_API_ENDPOINT,
+});
+
+const registerSignature = (id, signature) => {
+  LOG(`Register Signature: ${id}, ${signature}`);
+  return api.transact(
     {
       actions: [
         {
@@ -67,6 +77,7 @@ const registerSignature = (id, signature) =>
       expireSeconds: 30,
     }
   );
+};
 
 const generateEthSignature = (transferData) => {
   const { id, amount, chainId, tokenAddress, toAddress } = transferData;
@@ -89,13 +100,9 @@ const generateEthSignature = (transferData) => {
     }
   );
   const hashed = web3.utils.sha3(encoded);
-  return web3.eth
-    .sign(hashed, ethAddress)
-    .then(
-      (signature) =>
-        signature.substr(0, 130) +
-        (signature.substr(130) === '00' ? '1b' : '1c')
-    );
+  LOG(`Generating Signature for: ${hashed}`);
+  const { signature } = account.sign(hashed);
+  return signature;
 };
 
 const streamTransfer = `subscription ($query: String!, $cursor: String, $limit: Int64) {
@@ -164,8 +171,9 @@ const run = async () => {
             amount: amount * `1e${token.decimals}`,
             tokenAddress: token.address,
           };
-          generateEthSignature(parsedData)
-            .then((signature) => registerSignature(id, signature))
+          LOG('Received Sent:', parsedData);
+          const signature = generateEthSignature(parsedData);
+          registerSignature(id, signature)
             .then((result) => LOG('Successful sign: \n', result))
             .then(() => saveCursor(cursor));
         });

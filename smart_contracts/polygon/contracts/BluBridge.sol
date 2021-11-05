@@ -13,18 +13,18 @@ abstract contract BridgeERC20 is ERC20Burnable {
 }
 
 struct TransferData {
-    uint256 id;
+    uint64 id;
     uint256 amount;
     uint8 chainId;
-    bytes32 tokenAddress;
-    bytes32 toAddress;
+    address tokenAddress;
+    address toAddress;
 }
 
 struct SendTransferData {
     uint256 id;
     uint256 amount;
     uint8 chainId;
-    address toAddress;
+    bytes32 toAddress;
     address tokenContractAddress;
     bool claimed;
 }
@@ -112,9 +112,9 @@ contract TokenBridge is AccessControl {
             uint64 id,
             uint256 amount,
             uint8 toChainId,
-            bytes32 tokenAddress,
-            bytes32 toAddress
-        ) = abi.decode(data, (uint64, uint256, uint8, bytes32, bytes32));
+            address tokenAddress,
+            address toAddress
+        ) = abi.decode(data, (uint64, uint256, uint8, address, address));
 
         transferData = TransferData({
             id: id,
@@ -176,9 +176,8 @@ contract TokenBridge is AccessControl {
     }
 
     function claim(
-        address tokenAddress, //
-        address toAddress, // asset quantity `0.001 TNT`
-        bytes memory data, // hashed
+        address tokenAddress,
+        bytes memory data,
         bytes[] calldata signatures
     ) public {
         bytes32 message = keccak256(data);
@@ -199,22 +198,17 @@ contract TokenBridge is AccessControl {
         TransferData memory transferData = _extractTransferData(data);
 
         require(
-            keccak256(tokenAddress) == transferData.tokenAddress,
+            tokenAddress == transferData.tokenAddress,
             "Invalid token address"
         );
 
         require(supportedTokens[tokenAddress], "Unsupported token address");
 
-        require(
-            keccak256(toAddress) == transferData.toAddress,
-            "Invalid token address"
-        );
-
-        require(toAddress == msg.sender, "Not eligible for claim");
+        require(transferData.toAddress == msg.sender, "Not eligible for claim");
 
         BridgeERC20 erc20 = BridgeERC20(tokenAddress);
-        erc20.mint(toAddress, transferData.amount);
+        erc20.mint(msg.sender, transferData.amount);
 
-        emit Claimed(transferData.id, toAddress, transferData.amount);
+        emit Claimed(transferData.id, msg.sender, transferData.amount);
     }
 }
