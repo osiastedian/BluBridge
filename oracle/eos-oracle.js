@@ -1,17 +1,23 @@
-import WebSocket from "ws";
-import { Api, JsonRpc } from "eosjs";
-import fetch from "node-fetch";
-import Web3 from "web3";
-import { createDfuseClient } from "@dfuse/client";
-import { JsSignatureProvider } from "eosjs/dist/eosjs-jssig.js"; // development only
-import dotenv from "dotenv";
+import WebSocket from 'ws';
+import { Api, JsonRpc } from 'eosjs';
+import fetch from 'node-fetch';
+import Web3 from 'web3';
+import { createDfuseClient } from '@dfuse/client';
+// eslint-disable-next-line import/extensions
+import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig.js'; // development only
+import fs from 'fs';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// eslint-disable-next-line import/extensions
+import symbolToEthAddressMap from './eos-token-map.js';
+
 dotenv.config();
 
 const bridgeContract = process.env.EOS_CONTRACT_ACCOUNT;
 const logsendAction = process.env.EOS_CONTRACT_ACTION_LOGSEND;
 const signAction = process.env.EOS_CONTRACT_ACTION_SIGN;
 const oracleAccount = process.env.ORACLE_EOS_ACCOUNT;
-
 const ethAddress = process.env.ORACLE_POLYGON_ADDRESS;
 
 const web3 = new Web3(process.env.POLYGON_API_ENDPOINT);
@@ -19,13 +25,21 @@ const web3 = new Web3(process.env.POLYGON_API_ENDPOINT);
 const signatureProvider = new JsSignatureProvider([
   process.env.ORACLE_EOS_PRIVATE_KEY,
 ]);
-const rpc = new JsonRpc(process.env.EOS_API_ENDPOINT, { fetch }); //required to read blockchain state
-const api = new Api({ rpc, signatureProvider }); //required to submit transactions
+const rpc = new JsonRpc(process.env.EOS_API_ENDPOINT, { fetch }); // required to read blockchain state
+const api = new Api({ rpc, signatureProvider }); // required to submit transactions
 
 global.fetch = fetch;
 global.WebSocket = WebSocket;
 
-const symbolToEthAddressMap = require(process.env.EOS_SYMBOL_TOKEN_ADDRESS_MAO);
+// eslint-disable-next-line no-console
+const LOG = console.log;
+// eslint-disable-next-line no-console
+const ERROR = console.error;
+
+const dfuseClientOptions = {
+  apiKey: process.env.DFUSE_API_KEY,
+  network: process.env.DFUSE_NETWORK,
+};
 
 const registerSignature = (id, signature) =>
   api.transact(
@@ -37,7 +51,7 @@ const registerSignature = (id, signature) =>
           authorization: [
             {
               actor: oracleAccount,
-              permission: "active",
+              permission: 'active',
             },
           ],
           data: {
@@ -59,11 +73,11 @@ const generateEthSignature = (transferData) => {
   const encoded = web3.eth.abi.encodeParameter(
     {
       ParentStruct: {
-        propertyOne: "uint64", // id
-        propertyTwo: "uint256", // amount
-        propertyThree: "uint8", // chainId
-        propertyFour: "address", // tokenAddress
-        propertyFive: "address", // toAddress
+        propertyOne: 'uint64', // id
+        propertyTwo: 'uint256', // amount
+        propertyThree: 'uint8', // chainId
+        propertyFour: 'address', // tokenAddress
+        propertyFive: 'address', // toAddress
       },
     },
     {
@@ -79,7 +93,8 @@ const generateEthSignature = (transferData) => {
     .sign(hashed, ethAddress)
     .then(
       (signature) =>
-        signature.substr(0, 130) + (signature.substr(130) == "00" ? "1b" : "1c")
+        signature.substr(0, 130) +
+        (signature.substr(130) === '00' ? '1b' : '1c')
     );
 };
 
@@ -109,59 +124,63 @@ const streamTransfer = `subscription ($query: String!, $cursor: String, $limit: 
 
 `;
 
+const cursorPath = path.resolve(`${oracleAccount}-cursor.txt`);
+const saveCursor = (cursor) => {
+  if (fs.existsSync(cursorPath)) {
+    fs.rmSync(cursorPath);
+  }
+  fs.writeFileSync(cursorPath, cursor);
+};
+
 const run = async () => {
-  const client = createDfuseClient({
-    apiKey: process.env.DFUSE_API_KEY,
-    network: process.env.DFUSE_NETWORK,
-  });
+  const client = createDfuseClient(dfuseClientOptions);
 
-  console.log(`Starting EOS Oracle: ${oracleAccount}`);
-
+  LOG(`Starting EOS Oracle: ${oracleAccount}`);
+  let cursor = `${fs.existsSync(cursorPath) && fs.readFileSync(cursorPath)}`;
   await client.graphql(
     streamTransfer,
     (message, stream) => {
-      if (message.type === "error") {
-        console.log("An error occurred", message.errors, message.terminal);
+      if (message.type === 'error') {
+        ERROR('An error occurred', message.errors, message.terminal);
       }
 
-      if (message.type === "data") {
-        const data = message.data.searchTransactionsForward;
-        const actions = data.trace.matchingActions;
-        console.log("cursor", data.cursor);
+      if (message.type === 'data') {
+        const rawData = message.data.searchTransactionsForward;
+        const actions = rawData.trace.matchingActions;
+        cursor = rawData.cursor;
 
         actions.forEach((action) => {
-          const { quantity, memo, to_address } = action.json;
-          const id = action.json.id;
+          const { quantity, to_address: toAddress } = action.json;
+          const { id } = action.json;
           const chainId = action.json.chain_id;
-          const padding = "000000000000000000000000";
-          const toAddress = to_address.replace(padding, "0x");
-          const [amount, symbol] = quantity.split(" ");
+          const [amount, symbol] = quantity.split(' ');
 
           const token = symbolToEthAddressMap[symbol];
 
-          const rawData = {
+          const parsedData = {
             id,
             chainId,
-            toAddress,
+            toAddress: toAddress.replace('000000000000000000000000', '0x'),
             amount: amount * `1e${token.decimals}`,
             tokenAddress: token.address,
           };
-          generateEthSignature(rawData)
+          generateEthSignature(parsedData)
             .then((signature) => registerSignature(id, signature))
-            .then((result) => console.log("Successful sign: \n", result));
+            .then((result) => LOG('Successful sign: \n', result))
+            .then(() => saveCursor(cursor));
         });
 
-        stream.mark({ cursor: data.cursor });
+        stream.mark({ cursor: rawData.cursor });
       }
 
-      if (message.type === "complete") {
-        console.log("Stream completed");
+      if (message.type === 'complete') {
+        LOG('Stream completed');
       }
     },
     {
       variables: {
         query: `receiver:${bridgeContract} action:${logsendAction}`,
-        cursor: "",
+        cursor,
         limit: 10,
         irreversibleOnly: true,
       },
@@ -169,4 +188,4 @@ const run = async () => {
   );
 };
 
-run().catch(console.error);
+run().catch(ERROR);

@@ -1,13 +1,13 @@
-version: "3.8"
+version: '3.8'
 
 services:
   eos-oracle:
     build: .
-    command: ["yarn", "eos"]
+    command: ['yarn', 'eos']
   polygon-oracle:
     build: .
-    command: ["yarn", "polygon"]
+    command: ['yarn', 'polygon']
     environment:
-      ALCHEMY_WS_ENDPOINT: "wss://polygon-mumbai.g.alchemy.com/v2/QWNtr8-2DYzVXOl0VKMCR4YiClbXUN2J"
-      POLYGON_CONTRACT_ADDRESS: "0x818f546c13113DDD5B83413FD58b6974Ed7A2748"
-      POLYGON_CONTRACT_CLAIMED_TOPIC: "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+      ALCHEMY_WS_ENDPOINT: 'wss://polygon-mumbai.g.alchemy.com/v2/QWNtr8-2DYzVXOl0VKMCR4YiClbXUN2J'
+      POLYGON_CONTRACT_ADDRESS: '0x818f546c13113DDD5B83413FD58b6974Ed7A2748'
+      POLYGON_CONTRACT_CLAIMED_TOPIC: '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'

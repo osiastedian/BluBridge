@@ -4,7 +4,9 @@
   "description": "",
   "scripts": {
     "eos": "node eos-oracle.js",
-    "polygon": "node polygon-oracle.js"
+    "polygon": "node polygon-oracle.js",
+    "lint": "eslint .",
+    "format:write": "prettier --write ."
   },
   "author": "",
   "license": "ISC",
@@ -24,5 +26,12 @@
     "ws": "^8.2.3",
     "yarn": "^1.22.17"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.2",
+    "prettier": "2.4.1"
+  }
 }
