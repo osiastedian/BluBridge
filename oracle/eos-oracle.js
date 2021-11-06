@@ -168,7 +168,8 @@ const run = async () => {
             id,
             chainId,
             toAddress: toAddress.replace('000000000000000000000000', '0x'),
-            amount: amount * `1e${token.decimals}`,
+            amount:
+              amount * `1e${token.polygonDecimals}`,
             tokenAddress: token.address,
           };
           LOG('Received Sent:', parsedData);

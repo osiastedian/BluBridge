@@ -5,7 +5,7 @@ services:
     image: oracle-base
     command: ['yarn', 'eos']
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x818f546c13113DDD5B83413FD58b6974Ed7A2748'
+      POLYGON_CONTRACT_ADDRESS: '0x1DD5DBf638F08240a880aADc3B2A391E3A76A6e0'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: atyqxmszvnsk
       ORACLE_EOS_PRIVATE_KEY: 5K5fQ4RUVnZmcHxCFE8LgLMJtGkCCHobGYdfMbgF5uv3KJszRiD
@@ -22,7 +22,7 @@ services:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x818f546c13113DDD5B83413FD58b6974Ed7A2748'
+      POLYGON_CONTRACT_ADDRESS: '0x1DD5DBf638F08240a880aADc3B2A391E3A76A6e0'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: wtibpjgqsidc
       ORACLE_EOS_PRIVATE_KEY: 5KNZU2AeW7qkCLwQpSkwPhtTrgevfNaCrDfoFQNmbxc1MoHHSQP
@@ -50,10 +50,25 @@ services:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x818f546c13113DDD5B83413FD58b6974Ed7A2748'
+      POLYGON_CONTRACT_ADDRESS: '0x1DD5DBf638F08240a880aADc3B2A391E3A76A6e0'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: hbjsvradtjao
       ORACLE_EOS_PRIVATE_KEY: 5JfkBQSF1VwjDvuNtqG5iytX4ehQJt5J7ESemtBypy1idxHzCKs
       ORACLE_POLYGON_ADDRESS: '0x03130680483F7Ad50A0Fcf9eB636CbADE10f9b9f'
       ORACLE_POLYGON_PRIVATE_KEY: 58a7b95147d30d309ad62776c85dd89fa14fc416730bb2630bbfe18b35a47003
+      POLYGON_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
+  polygon-oracle1:
+    image: oracle-base
+    command: ['yarn', 'polygon']
+    volumes:
+      - ./eos-token-map.js:/app/eos-token-map.js
+      - .env:/app/.env
+    environment:
+      POLYGON_CONTRACT_ADDRESS: '0x1DD5DBf638F08240a880aADc3B2A391E3A76A6e0'
+      POLYGON_CONTRACT_CLAIMED_TOPIC: '0x4ec90e965519d92681267467f775ada5bd214aa92c0dc93d90a5e880ce9ed026'
+      EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
+      ORACLE_EOS_ACCOUNT: hbjsvradtjao
+      ORACLE_EOS_PRIVATE_KEY: 5JfkBQSF1VwjDvuNtqG5iytX4ehQJt5J7ESemtBypy1idxHzCKs
+      ORACLE_POLYGON_ADDRESS: '0xe0cbF38A0c610113379C086DC79CCaAf1EB5C20B'
+      ORACLE_POLYGON_PRIVATE_KEY: 4ac2da080b6e6f793e83bf0f6a75bd7a21f7dc605b09f685b647ec51cdbbf285
       POLYGON_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
