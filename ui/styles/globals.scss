@@ -1,0 +1,64 @@
+@import './variables';
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  background: linear-gradient(to right,#acb6e5, #c9fdf4);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.text-primary {
+  color: $color-primary !important;
+}
+
+.bg-primary {
+  background-color:  $color-primary !important;
+}
+
+.rounded-8 {
+  border-radius: 8px !important;
+}
+
+.rounded-16 {
+  border-radius: 16px!important;
+}
+
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+.font-weight-bold {
+  font-weight: bold !important;
+}
+
+.font-size-12px {
+  font-size: 12px !important;
+}
+
+.font-size-14px {
+  font-size: 14px !important;
+}
+
+.modal-open .container-fluid,
+.modal-open .container {
+  -webkit-filter: blur(8px) grayscale(60%);
+}
+
+.modal-content {
+  box-shadow: 10px 10px 250px 11px rgba(25, 37, 130, 0.48);
+  -webkit-box-shadow: 10px 10px 250px 11px rgba(25, 37, 130, 0.48);
+  -moz-box-shadow: 10px 10px 250px 11px rgba(25, 37, 130, 0.48);
+  background: white;
+  border-radius: 16px;
+}
