@@ -4,11 +4,11 @@
 using namespace blu;
 using namespace eosio;
 
-blubridge::blubridge( eosio::name s, 
-		eosio::name code, datastream<const char *> ds) : contract(s, code, ds),
-		oracles_(get_self(), get_self().value),
-		receipts_(get_self(), get_self().value),
-		bludata_(get_self(), get_self().value)
+blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> ds) : 
+	contract(s, code, ds),
+	oracles_(get_self(), get_self().value),
+	receipts_(get_self(), get_self().value),
+	bludata_(get_self(), get_self().value)
 {}
 
 
@@ -32,8 +32,7 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
     uint64_t transaction_id = bludata_.available_primary_key();
 	print_f("transaction_id[%]", transaction_id );
     uint32_t now = current_time_point().sec_since_epoch();
-	print(" send emplace");
-    bludata_.emplace(from, [&](auto &t){
+    bludata_.emplace( get_self(), [&](auto &t){
         t.id = transaction_id;
         t.time = now;
         t.account = from;
@@ -43,15 +42,13 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
         t.claimed = false;
     });
 
-	print(" send function end");
+	print(" send function end ");
 
-#if 0
     action(
         permission_level{get_self(), "active"_n},
-        get_self(), "logteleport"_n,
+        get_self(), "logsend"_n,
         make_tuple(transaction_id, now, from, quantity, chain_id, eth_address)
     ).send();
-#endif
 
 }
 
@@ -101,4 +98,44 @@ void blubridge::unregoracle( eosio::name oracle_name ){
     check(oracle != oracles_.end(), "Oracle does not exist");
 
     oracles_.erase(oracle);
+}
+
+void blubridge::logsend(uint64_t id, uint32_t timestamp, name from, asset quantity, uint8_t chain_id, checksum256 eth_address) {
+    // Logs the send id for the oracle to listen to
+    require_auth(get_self());
+}
+
+void blubridge::received(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity) {
+    require_oracle(oracle_name);
+
+    auto blu = bludata_.find(id);
+    check(blu != bludata_.end(), "Teleport not found");
+
+    check(blu->quantity == quantity, "Quantity mismatch");
+    check(blu->to_address == to_eth, "Account mismatch");
+    check(!blu->claimed, "Already marked as claimed");
+
+    bludata_.modify(*blu, same_payer, [&](auto &t){
+        t.claimed = true;
+    });
+}
+
+
+
+void blubridge::dsearchid( uint64_t id ){
+	auto itr = bludata_.find( id );
+	check( itr != bludata_.end(), "id does not exist");
+	print_f("Table Debug : { id : %, account % }", itr->id, itr->account.value ); 
+}
+
+void blubridge::dsearchname( eosio::name name ){
+	auto itr = bludata_.find( name.value );
+	check( itr != bludata_.end(), "name does not exist");
+	print_f("Table Debug : { id : %, account % }", itr->id, itr->account.value ); 
+}
+
+void blubridge::dsearchoracle( eosio::name name ){
+	auto itr = oracles_.find( name.value );
+	check( itr != oracles_.end(), " oracle does not exist in table");
+	print_f("Oracle Table: { oracle : % }", itr->account.value ); 
 }
