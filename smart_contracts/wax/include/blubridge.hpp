@@ -28,10 +28,8 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 			bool					claimed;
 
 			uint64_t primary_key() const { return id; }
-			uint64_t by_account() const { return account.value; }
 		};
-		typedef eosio::multi_index<"blu"_n, blu_item,
-		indexed_by<"byaccount"_n, const_mem_fun<blu_item, uint64_t, &blu_item::by_account>>> blu_table;
+		typedef eosio::multi_index<"blu"_n, blu_item> blu_table;
 
 		/* Oracles authorised to send receipts */
 		struct [[eosio::table("oracles")]] oracle_item {
@@ -63,25 +61,6 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		indexed_by<"byto"_n, const_mem_fun<receipt_item, uint64_t, &receipt_item::by_to>>
 		> receipts_table;
 
-		// Create currency on initial boot up
-		// Assign issuer to blubridge account
-         struct [[eosio::table]] currency_stats {
-            asset    supply;
-            asset    max_supply;
-            name     issuer;
-
-            uint64_t primary_key()const { return supply.symbol.code().raw(); }
-         };
-         typedef eosio::multi_index< "stat"_n, currency_stats > stats;
-
-		 // Bluebridge account record balance
-         struct [[eosio::table]] account {
-            asset    balance;
-
-            uint64_t primary_key()const { return balance.symbol.code().raw(); }
-         };
-         typedef eosio::multi_index< "accounts"_n, account > accounts;
-
 		oracles_table     oracles_;
 		receipts_table    receipts_;
 		blu_table		  bludata_;;
@@ -100,6 +79,24 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 
 		[[eosio::action]] void send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address);
 		[[eosio::action]] void sign(eosio::name oracle_name, uint64_t id, std::string signature);
+		[[eosio::action]] void logsend(uint64_t id, uint32_t timestamp, name from, asset quantity, uint8_t chain_id, checksum256 to_address);
+		[[eosio::action]] void received(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity);
+
+		 using regoracle_action = eosio::action_wrapper<"regoracle"_n, &blubridge::regoracle>;
+		 using unregoracle_action = eosio::action_wrapper<"unregoracle"_n, &blubridge::unregoracle>;
+		 using send_action = eosio::action_wrapper<"send"_n, &blubridge::send>;
+		 using sign_action = eosio::action_wrapper<"sign"_n, &blubridge::sign>;
+
+
+		//Debug functions
+		[[eosio::action]] void dsearchid( uint64_t id );
+		[[eosio::action]] void dsearchoracle( eosio::name name );
+		[[eosio::action]] void dsearchname( eosio::name name );
+
+		 //Debug functions
+		 using dsearchid_action = eosio::action_wrapper<"dsearchid"_n, &blubridge::dsearchid>;
+		 using dsearchoracle_action = eosio::action_wrapper<"dsearchoracle"_n, &blubridge::dsearchoracle>;
+		 using dsearchname_action = eosio::action_wrapper<"dsearchname"_n, &blubridge::dsearchname>;
 
 };
 

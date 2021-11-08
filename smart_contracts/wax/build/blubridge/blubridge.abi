@@ -4,16 +4,6 @@
     "types": [],
     "structs": [
         {
-            "name": "account",
-            "base": "",
-            "fields": [
-                {
-                    "name": "balance",
-                    "type": "asset"
-                }
-            ]
-        },
-        {
             "name": "blu_item",
             "base": "",
             "fields": [
@@ -56,20 +46,84 @@
             ]
         },
         {
-            "name": "currency_stats",
+            "name": "claimed",
             "base": "",
             "fields": [
                 {
-                    "name": "supply",
-                    "type": "asset"
-                },
-                {
-                    "name": "max_supply",
-                    "type": "asset"
-                },
-                {
-                    "name": "issuer",
+                    "name": "oracle_name",
                     "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "to_eth",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "dsearchid",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "dsearchname",
+            "base": "",
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "dsearchoracle",
+            "base": "",
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "logsend",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "timestamp",
+                    "type": "uint32"
+                },
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "chain_id",
+                    "type": "uint8"
+                },
+                {
+                    "name": "to_address",
+                    "type": "checksum256"
                 }
             ]
         },
@@ -188,6 +242,31 @@
     ],
     "actions": [
         {
+            "name": "claimed",
+            "type": "claimed",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "dsearchid",
+            "type": "dsearchid",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "dsearchname",
+            "type": "dsearchname",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "dsearchoracle",
+            "type": "dsearchoracle",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "logsend",
+            "type": "logsend",
+            "ricardian_contract": ""
+        },
+        {
             "name": "regoracle",
             "type": "regoracle",
             "ricardian_contract": ""
@@ -210,13 +289,6 @@
     ],
     "tables": [
         {
-            "name": "accounts",
-            "type": "account",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
             "name": "blu",
             "type": "blu_item",
             "index_type": "i64",
@@ -233,13 +305,6 @@
         {
             "name": "receipts",
             "type": "receipt_item",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
-            "name": "stat",
-            "type": "currency_stats",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
