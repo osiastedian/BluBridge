@@ -1,0 +1,1 @@
+export enum MetamaskError { NOT_INSTALLED, INVALID_NETWORK };
