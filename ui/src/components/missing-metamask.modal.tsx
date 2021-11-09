@@ -1,7 +1,14 @@
+import { Image } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 
-export default function ConnectMetamaskModal({ onHide = () => {} }) {
+interface MissingMetaMaskModalProps {
+  onHide: () => void;
+}
+
+const MissingMetamaskModal: React.FC<MissingMetaMaskModalProps> = ({
+  onHide,
+}) => {
   return (
     <Modal show={true} onHide={onHide} centered>
       <Modal.Header closeButton className='border-0'>
@@ -17,11 +24,13 @@ export default function ConnectMetamaskModal({ onHide = () => {} }) {
             variant='primary'
             className='bg-white text-primary font-weight-bold font-size-12px'
           >
-            <img src='/metamask.png' width='20' alt='' />
+            <Image src='/metamask.png' width='20' alt='' />
             <span className='mx-2'>DOWNLOAD METAMASK</span>
           </Button>
         </a>
       </Modal.Footer>
     </Modal>
   );
-}
+};
+
+export default MissingMetamaskModal;

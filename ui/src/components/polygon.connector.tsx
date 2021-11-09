@@ -1,55 +1,68 @@
 import { useState } from 'react';
+import { Image } from 'react-bootstrap';
 
-import metamaskService from '../services/metamask.service';
+import useMetaMask from '../services/metamask.service';
 import { truncateAddress } from '../services/utils.service';
 import { PolygonMainnet } from '../shared/constants';
 import { MetamaskError } from '../shared/enums/metamask-error.enum';
-import ConnectMetamaskModal from './connect-metamask.modal';
-import ConnectNetworkModal from './connect-network.modal';
+import ConnectToNetworkModal from './connect-to-network.modal';
+import MissingMetamaskModal from './missing-metamask.modal';
 
 export default function PolygonConnector() {
-    const [address, setAddress] = useState('');
-    
-    const [showMMError, setShowMMError] = useState(false);
-    const closeMMError = () => setShowMMError(false);
+  const metamask = useMetaMask();
 
-    const [showNetworkError, setNetworkError] = useState(false);
-    const closeNetworkError = () => setNetworkError(false);
+  const [showMMError, setShowMMError] = useState(false);
+  const closeMMError = () => setShowMMError(false);
 
-    const onConnect = () => {
-        metamaskService.connectWallet(
-            PolygonMainnet.chainId,
-            (address: string) => {
-                setAddress(address);
-            },
-            (error: MetamaskError) => {
-                console.log(error);
-                if (error === MetamaskError.INVALID_NETWORK) {
-                    setNetworkError(true);
-                } else if (error === MetamaskError.NOT_INSTALLED) {
-                    setShowMMError(true);
-                }
-            }
-        );
-    }
+  const [showNetworkError, setNetworkError] = useState(false);
+  const closeNetworkError = () => setNetworkError(false);
 
-    return (
-        <>
-            <div className="text-center w-100">
-                <img src="/matic-logo.png" alt="" height="50" />
-                <div className="mt-2 font-size-12px">
-                    Polygon
-                </div>
-            </div>
-            <div className="w-100">
-                <button 
-                onClick={onConnect}
-                className="w-100 bg-primary btn text-white rounded shadow mt-3 bg-primary">
-                    { address ? `Connected as ${truncateAddress(address)}` : 'Connect'  }
-                </button>
-            </div>
-            {showMMError && <ConnectMetamaskModal onHide={closeMMError}></ConnectMetamaskModal>}
-            {showNetworkError && <ConnectNetworkModal onHide={closeNetworkError} targetNetwork={PolygonMainnet.chainName} addNetwork={() => {metamaskService.addChain(PolygonMainnet);closeNetworkError();onConnect();}}></ConnectNetworkModal>}
-        </>
+  const onConnect = () =>
+    metamask.connectWallet(
+      PolygonMainnet.chainId,
+      (address: string) => {
+        console.log(`Connected to Metamask ${address}`);
+      },
+      (error: MetamaskError) => {
+        console.log(error);
+        if (error === MetamaskError.INVALID_NETWORK) {
+          setNetworkError(true);
+        } else if (error === MetamaskError.NOT_INSTALLED) {
+          setShowMMError(true);
+        }
+      }
     );
+
+  return (
+    <>
+      <div className='text-center w-100'>
+        <Image src='/matic-logo.png' alt='' height='50' />
+        <div className='mt-2 font-size-12px'>Polygon</div>
+      </div>
+      <div className='w-100'>
+        <button
+          onClick={onConnect}
+          className='w-100 bg-primary btn text-white rounded shadow mt-3 bg-primary'
+        >
+          {metamask.address
+            ? `Connected as ${truncateAddress(metamask.address)}`
+            : 'Connect'}
+        </button>
+      </div>
+      {showMMError && (
+        <MissingMetamaskModal onHide={closeMMError}></MissingMetamaskModal>
+      )}
+      {showNetworkError && (
+        <ConnectToNetworkModal
+          onHide={closeNetworkError}
+          targetNetwork={PolygonMainnet.chainName}
+          addNetwork={() => {
+            metamask.addChain(PolygonMainnet);
+            closeNetworkError();
+            onConnect;
+          }}
+        ></ConnectToNetworkModal>
+      )}
+    </>
+  );
 }
