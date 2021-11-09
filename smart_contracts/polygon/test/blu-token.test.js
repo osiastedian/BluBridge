@@ -14,10 +14,8 @@ contract("BluDacToken", (accounts) => {
 
   it("should be able to burn", async () => {
     const instance = await BluToken.deployed();
-    const burnerRole = await instance.BURNER_ROLE();
-    await instance.grantRole(burnerRole, accounts[3]);
-
-    await instance.burn(accounts[2], 10000, { from: accounts[3] });
+    await instance.approve(accounts[3], 10000, { from: accounts[2] });
+    await instance.burnFrom(accounts[2], 10000, { from: accounts[3] });
     const balance = await instance.balanceOf(accounts[2]);
     const totalSupply = await instance.totalSupply();
     expect(totalSupply.toNumber()).to.be.equal(0);

@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "eos": "node eos-oracle.js"
+    "eos": "node eos-oracle.js",
+    "polygon": "node polygon-oracle.js",
+    "lint": "eslint .",
+    "format:write": "prettier --write ."
   },
   "author": "",
   "license": "ISC",
@@ -11,8 +14,11 @@
     "@apollo/client": "^3.4.16",
     "@dfuse/client": "^0.3.20",
     "@eosdacio/eosio-statereceiver": "^1.1.1",
+    "@maticnetwork/dagger": "^0.2.0",
     "add": "^2.0.6",
+    "dotenv": "^10.0.0",
     "eosjs": "^22.1.0",
+    "eosjs-ecc": "^4.0.7",
     "graphql": "^16.0.1",
     "graphql-ws": "^5.5.5",
     "node-fetch": "^3.0.0",
@@ -20,5 +26,12 @@
     "ws": "^8.2.3",
     "yarn": "^1.22.17"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.2",
+    "prettier": "2.4.1"
+  }
 }
