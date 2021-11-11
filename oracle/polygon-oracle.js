@@ -16,6 +16,7 @@ const ERROR = console.error;
 const wsEndpoint = process.env.POLYGON_WS_ENDPOINT;
 const contractAddress = process.env.POLYGON_CONTRACT_ADDRESS;
 const claimedTopic = process.env.POLYGON_CONTRACT_CLAIMED_TOPIC;
+const sentTopic = process.env.POLYGON_CONTRACT_SENT_TOPIC;
 const eosOracle = process.env.ORACLE_EOS_ACCOUNT;
 const polygonOracle = process.env.ORACLE_POLYGON_ADDRESS;
 const eosContractAccount = process.env.EOS_CONTRACT_ACCOUNT;
@@ -24,15 +25,15 @@ const ws = new WebSocket(wsEndpoint, {
   createConnection: ({}, (error, socket) => LOG({ error, socket })),
 });
 
-const eventSubscription = {
+const logSubscription = {
   jsonrpc: '2.0',
   id: 1,
   method: 'eth_subscribe',
   params: [
     'logs',
     {
-      address: contractAddress,
-      topics: [claimedTopic],
+      address: '0xF6287d13de5c52cd320902C939C188217477F05b',
+      topics: [sentTopic],
     },
   ],
 };
@@ -76,19 +77,26 @@ const claim = ({ id, toAddress, amount, symbol }) => {
     });
 };
 
+let subscriptionId = null;
+
 ws.on('open', () => {
   LOG('Connection Established!', {
     eosOracle,
     polygonOracle,
     contractAddress,
     claimedTopic,
+    sentTopic,
+    logSubscription,
   });
-  ws.send(JSON.stringify(eventSubscription));
+  ws.send(JSON.stringify(logSubscription));
 });
 
 ws.on('message', (rawData) => {
   const json = JSON.parse(rawData);
   LOG(JSON.stringify(json));
+  if (json.id === 1) {
+    subscriptionId = json.result;
+  }
   if (!json?.params?.result) {
     return;
   }
@@ -109,9 +117,23 @@ ws.on('message', (rawData) => {
       amount,
       symbol: tokenInfo.account,
     });
+  } else if (topic === sentTopic) {
+    console.log('HANDLE SENT!');
   }
 });
 
 ws.on('error', (error) => {
   ERROR(error);
 });
+
+// process.on('SIGKILL', () => {
+//   console.log('unsubscribe');
+//   ws.send(
+//     JSON.stringify({
+//       jsonrpc: '2.0',
+//       id: 1,
+//       method: 'eth_unsubscribe',
+//       params: [subscriptionId],
+//     })
+//   );
+// });
