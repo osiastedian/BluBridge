@@ -8,11 +8,11 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 	contract(s, code, ds),
 	oracles_(get_self(), get_self().value),
 	receipts_(get_self(), get_self().value),
-	bludata_(get_self(), get_self().value)
+	transferdata_(get_self(), get_self().value)
 {}
 
 
-void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address, eosio::checksum256 tokenAddress) {
+void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
     require_auth(from);
 
     check(quantity.is_valid(), "Amount is not valid");
@@ -29,10 +29,10 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
 	transfer.send( get_self(), "eosio.token"_n, quantity, "Amount transferred to self" );
 	print("external contract transfer completed");
 
-    uint64_t transaction_id = bludata_.available_primary_key();
+    uint64_t transaction_id = transferdata_.available_primary_key();
 	print_f("transaction_id[%]", transaction_id );
     uint32_t now = current_time_point().sec_since_epoch();
-    bludata_.emplace( get_self(), [&](auto &t){
+    transferdata_.emplace( get_self(), [&](auto &t){
         t.id = transaction_id;
         t.time = now;
         t.account = from;
@@ -40,7 +40,6 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
         t.chain_id = chain_id;
         t.to_address = eth_address;
         t.claimed = false;
-        t.tokenAddress = tokenAddress;
     });
 
 	print(" send function end ");
@@ -58,8 +57,8 @@ void blubridge::sign( eosio::name oracle_name, uint64_t id, std::string signatur
 	// in the claim function on the eth contract
 	require_oracle(oracle_name);
 
-	auto blu = bludata_.find(id);
-	check(blu != bludata_.end(), "Send item not found");
+	auto blu = transferdata_.find(id);
+	check(blu != transferdata_.end(), "Send item not found");
 
 	auto find_res = std::find(blu->oracles.begin(), blu->oracles.end(), oracle_name);
 
@@ -68,7 +67,7 @@ void blubridge::sign( eosio::name oracle_name, uint64_t id, std::string signatur
 
 	check(find_res == blu->oracles.end(), "Oracle has already signed");
 
-	bludata_.modify(*blu, get_self(), [&](auto &t){
+	transferdata_.modify(*blu, get_self(), [&](auto &t){
 		t.oracles.push_back(oracle_name);
 		t.signatures.push_back(signature);
 	});
@@ -109,14 +108,14 @@ void blubridge::logsend(uint64_t id, uint32_t timestamp, name from, asset quanti
 void blubridge::received(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity) {
     require_oracle(oracle_name);
 
-    auto blu = bludata_.find(id);
-    check(blu != bludata_.end(), "Teleport not found");
+    auto blu = transferdata_.find(id);
+    check(blu != transferdata_.end(), "Teleport not found");
 
     check(blu->quantity == quantity, "Quantity mismatch");
     check(blu->to_address == to_eth, "Account mismatch");
     check(!blu->claimed, "Already marked as claimed");
 
-    bludata_.modify(*blu, same_payer, [&](auto &t){
+    transferdata_.modify(*blu, same_payer, [&](auto &t){
         t.claimed = true;
     });
 }
@@ -124,14 +123,14 @@ void blubridge::received(name oracle_name, uint64_t id, checksum256 to_eth, asse
 
 
 void blubridge::dsearchid( uint64_t id ){
-	auto itr = bludata_.find( id );
-	check( itr != bludata_.end(), "id does not exist");
+	auto itr = transferdata_.find( id );
+	check( itr != transferdata_.end(), "id does not exist");
 	print_f("Table Debug : { id : %, account % }", itr->id, itr->account.value ); 
 }
 
 void blubridge::dsearchname( eosio::name name ){
-	auto itr = bludata_.find( name.value );
-	check( itr != bludata_.end(), "name does not exist");
+	auto itr = transferdata_.find( name.value );
+	check( itr != transferdata_.end(), "name does not exist");
 	print_f("Table Debug : { id : %, account % }", itr->id, itr->account.value ); 
 }
 

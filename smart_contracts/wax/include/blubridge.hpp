@@ -16,7 +16,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 	private:
 
 		/* Represents transfer in progress */
-		struct [[eosio::table("blu")]] blu_item {
+		struct [[eosio::table("transferdata")]] blu_item {
 			uint64_t				id;
 			uint32_t				time;
 			eosio::name			    account;
@@ -29,7 +29,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 
 			uint64_t primary_key() const { return id; }
 		};
-		typedef eosio::multi_index<"blu"_n, blu_item> blu_table;
+		typedef eosio::multi_index<"transferdata"_n, blu_item> transfer_table;
 
 		/* Oracles authorised to send receipts */
 		struct [[eosio::table("oracles")]] oracle_item {
@@ -63,7 +63,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 
 		oracles_table     oracles_;
 		receipts_table    receipts_;
-		blu_table		  bludata_;;
+		transfer_table		  transferdata_;;
 
 		void require_oracle( eosio::name account );
 

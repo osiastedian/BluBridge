@@ -46,28 +46,6 @@
             ]
         },
         {
-            "name": "claimed",
-            "base": "",
-            "fields": [
-                {
-                    "name": "oracle_name",
-                    "type": "name"
-                },
-                {
-                    "name": "id",
-                    "type": "uint64"
-                },
-                {
-                    "name": "to_eth",
-                    "type": "checksum256"
-                },
-                {
-                    "name": "quantity",
-                    "type": "asset"
-                }
-            ]
-        },
-        {
             "name": "dsearchid",
             "base": "",
             "fields": [
@@ -180,6 +158,28 @@
             ]
         },
         {
+            "name": "received",
+            "base": "",
+            "fields": [
+                {
+                    "name": "oracle_name",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "to_eth",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
             "name": "regoracle",
             "base": "",
             "fields": [
@@ -242,11 +242,6 @@
     ],
     "actions": [
         {
-            "name": "claimed",
-            "type": "claimed",
-            "ricardian_contract": ""
-        },
-        {
             "name": "dsearchid",
             "type": "dsearchid",
             "ricardian_contract": ""
@@ -264,6 +259,11 @@
         {
             "name": "logsend",
             "type": "logsend",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "received",
+            "type": "received",
             "ricardian_contract": ""
         },
         {
@@ -289,13 +289,6 @@
     ],
     "tables": [
         {
-            "name": "blu",
-            "type": "blu_item",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
             "name": "oracles",
             "type": "oracle_item",
             "index_type": "i64",
@@ -305,6 +298,13 @@
         {
             "name": "receipts",
             "type": "receipt_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "transferdata",
+            "type": "blu_item",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
