@@ -69,7 +69,10 @@ contract TokenBridge is AccessControl {
         chainId = _chainId;
     }
 
-    function registerToken(address tokenContractAddress) public {
+    function registerToken(address tokenContractAddress)
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(tokenContractAddress.isContract(), "Address is not a contract");
         require(
             !supportedTokens[tokenContractAddress],
@@ -79,7 +82,10 @@ contract TokenBridge is AccessControl {
         emit RegisterToken(tokenContractAddress);
     }
 
-    function unregisterToken(address tokenContractAddress) public {
+    function unregisterToken(address tokenContractAddress)
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(
             supportedTokens[tokenContractAddress],
             "Token is not supported"
@@ -88,7 +94,10 @@ contract TokenBridge is AccessControl {
         emit UnregisterToken(tokenContractAddress);
     }
 
-    function registerChainId(uint8 recepientChainId) public {
+    function registerChainId(uint8 recepientChainId)
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(
             !supportedChainIds[recepientChainId],
             "ChainId already supported"
@@ -97,7 +106,10 @@ contract TokenBridge is AccessControl {
         emit RegisterChainId(recepientChainId);
     }
 
-    function ungisterChainId(uint8 recepientChainId) public {
+    function ungisterChainId(uint8 recepientChainId)
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(supportedChainIds[recepientChainId], "ChainId not supported");
         supportedChainIds[recepientChainId] = false;
         emit UnregisterChainId(recepientChainId);

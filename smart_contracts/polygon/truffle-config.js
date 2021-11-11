@@ -101,4 +101,7 @@ module.exports = {
   // }
   // }
   plugins: ["truffle-plugin-verify"],
+  api_keys: {
+    // polygonscan: X9RPVIQYARQSYINXGTHMFH3A27ZW4V18WG
+  }
 };

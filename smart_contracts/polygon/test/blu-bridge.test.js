@@ -3,15 +3,18 @@ const Bridge = artifacts.require("TokenBridge");
 const BluToken = artifacts.require("BluDacToken");
 
 contract("Bridge", (accounts) => {
+  let bridge, bluToken, minterRole;
+  before(async () => {
+    bridge = await Bridge.deployed();
+    bluToken = await BluToken.deployed();
+    minterRole = await bluToken.MINTER_ROLE();
+  });
+
   it("should have chain id of 1", async () => {
-    const bridge = await Bridge.deployed();
     const chainId = await bridge.chainId();
     expect(chainId.toNumber()).to.be.equal(1);
   });
   it("should be able to register blu token", async () => {
-    const bridge = await Bridge.deployed();
-    const bluToken = await BluToken.deployed();
-
     await bridge.registerToken(bluToken.address);
 
     const isSupported = await bridge.supportedTokens(bluToken.address);
@@ -20,9 +23,6 @@ contract("Bridge", (accounts) => {
 
   it("should be able to claim ", async () => {
     // Arrange
-    const bridge = await Bridge.deployed();
-    const bluToken = await BluToken.deployed();
-    const minterRole = await bluToken.MINTER_ROLE();
     await bluToken.grantRole(minterRole, bridge.address);
     const oracleRole = await bridge.ORACLE_ROLE();
     const oracle1 = web3.eth.accounts.create();
@@ -31,8 +31,6 @@ contract("Bridge", (accounts) => {
     await bridge.grantRole(oracleRole, oracle1.address);
     await bridge.grantRole(oracleRole, oracle2.address);
     await bridge.grantRole(oracleRole, oracle3.address);
-
-    const userAccount = web3.eth.accounts.create();
 
     const encoded = web3.eth.abi.encodeParameter(
       {
@@ -85,49 +83,54 @@ contract("Bridge", (accounts) => {
     expect(balance.toNumber()).to.be.equal(2000);
   });
 
-  it("should be able to send", async () => {
-    const bridge = await Bridge.deployed();
-    const bluToken = await BluToken.deployed();
-    const minterRole = await bluToken.MINTER_ROLE();
-    await bluToken.grantRole(minterRole, accounts[2]);
-
-    const toAmount = 2000;
-
+  describe("sending", async () => {
+    let bridge, bluToken;
     const waxChainId = 2;
-    await bridge.registerChainId(waxChainId);
+    before(async () => {
+      bridge = await Bridge.deployed();
+      bluToken = await BluToken.deployed();
+      const minterRole = await bluToken.MINTER_ROLE();
+      await bluToken.grantRole(minterRole, accounts[2]);
+      await bridge.registerChainId(waxChainId);
+    });
+    it("should be able to send", async () => {
+      const toAmount = 2000;
 
-    await bluToken.mint(accounts[2], toAmount, { from: accounts[2] });
-    let balance = await bluToken.balanceOf(accounts[2]);
+      await bluToken.mint(accounts[2], toAmount, { from: accounts[2] });
+      let balance = await bluToken.balanceOf(accounts[2]);
 
-    expect(balance.toNumber()).to.be.equal(toAmount);
+      expect(balance.toNumber()).to.be.equal(toAmount);
 
-    await bluToken.approve(bridge.address, toAmount, { from: accounts[2] });
-    const allowance = await bluToken.allowance(accounts[2], bridge.address);
+      await bluToken.approve(bridge.address, toAmount, { from: accounts[2] });
+      const allowance = await bluToken.allowance(accounts[2], bridge.address);
 
-    expect(allowance.toNumber()).to.be.equal(toAmount);
+      expect(allowance.toNumber()).to.be.equal(toAmount);
 
-    const waxAccount = "alice";
+      const waxAccount = "alice";
 
-    const tx = await bridge.send(
-      bluToken.address,
-      balance,
-      waxChainId,
-      web3.utils.asciiToHex(waxAccount),
-      { from: accounts[2] }
-    );
+      const tx = await bridge.send(
+        bluToken.address,
+        balance,
+        waxChainId,
+        web3.utils.asciiToHex(waxAccount),
+        { from: accounts[2] }
+      );
 
-    truffleAssertions.eventEmitted(
-      tx,
-      "Sent",
-      ({ id, fromAddress, toChainId, toAddress, amount }) => {
-        return (
-          id.toNumber() === tx.logs[0].blockNumber &&
-          toAddress.toString().startsWith(web3.utils.asciiToHex(waxAccount)) &&
-          amount.toNumber() === toAmount &&
-          toChainId.toNumber() === waxChainId &&
-          fromAddress === accounts[2]
-        );
-      }
-    );
+      truffleAssertions.eventEmitted(
+        tx,
+        "Sent",
+        ({ id, fromAddress, toChainId, toAddress, amount }) => {
+          return (
+            id.toNumber() === tx.logs[0].blockNumber &&
+            toAddress
+              .toString()
+              .startsWith(web3.utils.asciiToHex(waxAccount)) &&
+            amount.toNumber() === toAmount &&
+            toChainId.toNumber() === waxChainId &&
+            fromAddress === accounts[2]
+          );
+        }
+      );
+    });
   });
 });
