@@ -46,31 +46,25 @@
             ]
         },
         {
-            "name": "dsearchid",
+            "name": "chain_item",
             "base": "",
             "fields": [
                 {
-                    "name": "id",
+                    "name": "chain_id",
                     "type": "uint64"
+                },
+                {
+                    "name": "description",
+                    "type": "string"
                 }
             ]
         },
         {
-            "name": "dsearchname",
+            "name": "grantrole",
             "base": "",
             "fields": [
                 {
-                    "name": "name",
-                    "type": "name"
-                }
-            ]
-        },
-        {
-            "name": "dsearchoracle",
-            "base": "",
-            "fields": [
-                {
-                    "name": "name",
+                    "name": "account",
                     "type": "name"
                 }
             ]
@@ -180,6 +174,20 @@
             ]
         },
         {
+            "name": "regchainid",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint8"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
             "name": "regoracle",
             "base": "",
             "fields": [
@@ -230,6 +238,16 @@
             ]
         },
         {
+            "name": "unregchainid",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint8"
+                }
+            ]
+        },
+        {
             "name": "unregoracle",
             "base": "",
             "fields": [
@@ -242,18 +260,8 @@
     ],
     "actions": [
         {
-            "name": "dsearchid",
-            "type": "dsearchid",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "dsearchname",
-            "type": "dsearchname",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "dsearchoracle",
-            "type": "dsearchoracle",
+            "name": "grantrole",
+            "type": "grantrole",
             "ricardian_contract": ""
         },
         {
@@ -264,6 +272,11 @@
         {
             "name": "received",
             "type": "received",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "regchainid",
+            "type": "regchainid",
             "ricardian_contract": ""
         },
         {
@@ -282,12 +295,24 @@
             "ricardian_contract": ""
         },
         {
+            "name": "unregchainid",
+            "type": "unregchainid",
+            "ricardian_contract": ""
+        },
+        {
             "name": "unregoracle",
             "type": "unregoracle",
             "ricardian_contract": ""
         }
     ],
     "tables": [
+        {
+            "name": "idchain",
+            "type": "chain_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
         {
             "name": "oracles",
             "type": "oracle_item",

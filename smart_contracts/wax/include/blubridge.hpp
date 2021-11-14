@@ -69,6 +69,18 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 
 		void require_oracle( eosio::name account );
 
+		eosio::name admin_account_;
+
+		/* Chain ID Registration */
+		struct [[eosio::table("idchain")]] chain_item {
+			uint64_t  chain_id;
+			std::string  description;
+
+			uint64_t primary_key() const { return chain_id; }
+		};
+		typedef eosio::multi_index<"idchain"_n, chain_item> chain_table;
+		chain_table     chains_;
+
 	public:
 		using contract::contract;
 
@@ -83,6 +95,13 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		[[eosio::action]] void sign(eosio::name oracle_name, uint64_t id, std::string signature);
 		[[eosio::action]] void logsend(uint64_t id, uint32_t timestamp, name from, asset quantity, uint8_t chain_id, checksum256 to_address);
 		[[eosio::action]] void received(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity);
+
+		//TODO: additional implementations
+		[[eosio::action]] void grantrole(name account);
+		[[eosio::action]] void regchainid(uint8_t id, std::string memo);
+		[[eosio::action]] void unregchainid(uint8_t id);
+
+
 
 		 using regoracle_action = eosio::action_wrapper<"regoracle"_n, &blubridge::regoracle>;
 		 using unregoracle_action = eosio::action_wrapper<"unregoracle"_n, &blubridge::unregoracle>;
