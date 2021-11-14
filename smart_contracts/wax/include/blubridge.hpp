@@ -3,6 +3,8 @@
 #include <eosio/transaction.hpp>
 #include <vector>
 
+#define ORACLE_CONFIRMATIONS 3
+
 using namespace eosio;
 using namespace std;
 
@@ -86,17 +88,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		 using unregoracle_action = eosio::action_wrapper<"unregoracle"_n, &blubridge::unregoracle>;
 		 using send_action = eosio::action_wrapper<"send"_n, &blubridge::send>;
 		 using sign_action = eosio::action_wrapper<"sign"_n, &blubridge::sign>;
-
-
-		//Debug functions
-		[[eosio::action]] void dsearchid( uint64_t id );
-		[[eosio::action]] void dsearchoracle( eosio::name name );
-		[[eosio::action]] void dsearchname( eosio::name name );
-
-		 //Debug functions
-		 using dsearchid_action = eosio::action_wrapper<"dsearchid"_n, &blubridge::dsearchid>;
-		 using dsearchoracle_action = eosio::action_wrapper<"dsearchoracle"_n, &blubridge::dsearchoracle>;
-		 using dsearchname_action = eosio::action_wrapper<"dsearchname"_n, &blubridge::dsearchname>;
+		 using receive_action = eosio::action_wrapper<"received"_n, &blubridge::received>;
 
 };
 

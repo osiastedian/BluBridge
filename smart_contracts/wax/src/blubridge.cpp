@@ -14,20 +14,36 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 
 void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
     require_auth(from);
+	print("send log");
 
     check(quantity.is_valid(), "Amount is not valid");
     check(quantity.amount > 0, "Amount cannot be negative");
     check(quantity.symbol.is_valid(), "Invalid symbol name");
 
-
 	print("starting transfer to external contract");
 	//Modification, transfer token to self
 	//Test call inline function to eosio.token contract
+	// token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
+	// TODO: modify transfer command permission
+	// ---- SET A Working ----
 	token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
+	transfer.send( get_self(), from, quantity, "Amount transferred to self" );
+	// ---- SET A Working ----
 
-	//send() command links to external contract
-	transfer.send( get_self(), "eosio.token"_n, quantity, "Amount transferred to self" );
+	// TODO: IDEAL not yet working
+	// ---- SET B Working ----
+	// token::transfer_action transfer( "eosio.token"_n, { from, "active"_n});
+	// transfer.send( from, get_self(), quantity, "amount transfered from --> self" );
+	// ---- SET B Working ----
+
+
+	//	TODO: working
+	// //send() command links to external contract
+	// // transfer.send( get_self(), "eosio.token"_n, quantity, "Amount transferred to self" );
+	// //TODO: modified send transfer command parameters
+	// transfer.send( from, get_self(), quantity, "Amount transferred to self" ); //TODO: erorr on eosio.code authority for keanne to transfer to blubridge account
 	print("external contract transfer completed");
+
 
     uint64_t transaction_id = transferdata_.available_primary_key();
 	print_f("transaction_id[%]", transaction_id );
@@ -108,34 +124,23 @@ void blubridge::logsend(uint64_t id, uint32_t timestamp, name from, asset quanti
 void blubridge::received(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity) {
     require_oracle(oracle_name);
 
-    auto blu = transferdata_.find(id);
-    check(blu != transferdata_.end(), "Teleport not found");
+    auto item = transferdata_.find(id);
+    check(item != transferdata_.end(), "Data is not found");
 
-    check(blu->quantity == quantity, "Quantity mismatch");
-    check(blu->to_address == to_eth, "Account mismatch");
-    check(!blu->claimed, "Already marked as claimed");
+    check(item->quantity == quantity, "Quantity mismatch");
+    check(item->to_address == to_eth, "Account mismatch");
+    check(!item->claimed, "Already marked as claimed");
 
-    transferdata_.modify(*blu, same_payer, [&](auto &t){
-        t.claimed = true;
-    });
-}
+	auto oracle_count = item->oracles.size();
+	check(oracle_count >= ORACLE_CONFIRMATIONS, "Not enough oracle signatures");
+
+	print("starting transfer to external contract");
+	token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
+	transfer.send( get_self(), item->account, quantity, "Amount successfully transferred" );
+	
+	transferdata_.modify(*item, same_payer, [&](auto &t){
+		t.claimed = true;
+	});
 
 
-
-void blubridge::dsearchid( uint64_t id ){
-	auto itr = transferdata_.find( id );
-	check( itr != transferdata_.end(), "id does not exist");
-	print_f("Table Debug : { id : %, account % }", itr->id, itr->account.value ); 
-}
-
-void blubridge::dsearchname( eosio::name name ){
-	auto itr = transferdata_.find( name.value );
-	check( itr != transferdata_.end(), "name does not exist");
-	print_f("Table Debug : { id : %, account % }", itr->id, itr->account.value ); 
-}
-
-void blubridge::dsearchoracle( eosio::name name ){
-	auto itr = oracles_.find( name.value );
-	check( itr != oracles_.end(), " oracle does not exist in table");
-	print_f("Oracle Table: { oracle : % }", itr->account.value ); 
 }
