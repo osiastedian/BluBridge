@@ -18,6 +18,8 @@ public_key2=$( cleos wallet create_key | awk '{print $10}' | sed 's/\"//g' )
 public_key3=$( cleos wallet create_key | awk '{print $10}' | sed 's/\"//g' )
 public_key_keanne=$( cleos wallet create_key | awk '{print $10}' | sed 's/\"//g' )
 
+
+
 #
 # Import EOSIO development key from site
 #
@@ -45,6 +47,10 @@ cleos create account eosio blubridge ${public_key2}
 
 echo -e "${GREEN}set contract blubridge${END}"
 cleos set contract blubridge ../build/blubridge/ 
+
+# Create admin account
+public_key_admin1=$( cleos wallet create_key | awk '{print $10}' | sed 's/\"//g' )
+cleos create account eosio admin1 ${public_key_admin1}
 
 echo -e "${GREEN}set eosio.code permission to account blubridge${END}"						 #Setting of additional permission to 
 #TODO: removed add code permission
@@ -76,6 +82,13 @@ cleos create account eosio keanne ${public_key_keanne}
 
 echo -e "${GREEN}transfer initial amount of 1000 to keanne account${END}"
 cleos push action eosio.token transfer '["eosio.token","keanne", "1000 BLU", "Initial amount given to Keanne account"]' -p eosio.token@active
+
+echo -e "${GREEN}Test transfer from bluebridge to eosio.token${END}"
+cleos push action blubridge regchainid '["1234", "initial chain id"]' -p admin1@active
+
+echo -e "${GREEN}register token symbol to smart contract ${END}"
+cleos push action blubridge regsymbol '["1 BLU", "initial register"]' -p admin1@active
+
 
 echo -e "${GREEN}Test transfer from bluebridge to eosio.token${END}"
 cleos push action blubridge send '["keanne","1 BLU", "1234", "1234"]' -p keanne@active

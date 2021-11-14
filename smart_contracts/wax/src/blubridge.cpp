@@ -8,6 +8,7 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 	contract(s, code, ds),
 	oracles_(get_self(), get_self().value),
 	chains_(get_self(), get_self().value),
+	symbolss_(get_self(), get_self().value),
 	receipts_(get_self(), get_self().value),
 	transferdata_(get_self(), get_self().value)
 {
@@ -25,6 +26,9 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
 
 	//check if chain_id parameter is registered in table
 	chains_.get(chain_id, "Chain ID is not yet registered. Denying transaction");
+
+	//Check if symbol is already added in apporved symbols
+	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
 
 	print("starting transfer to external contract");
 	//Modification, transfer token to self
@@ -146,9 +150,6 @@ void blubridge::received(name oracle_name, uint64_t id, checksum256 to_eth, asse
     check(item->to_address == to_eth, "Account mismatch");
     check(!item->claimed, "Already marked as claimed");
 
-	//check if chain_id parameter is registered in table
-	chains_.get(chain_id, "Chain ID is not yet registered. Denying transaction");
-
 	auto oracle_count = item->oracles.size();
 	check(oracle_count >= ORACLE_CONFIRMATIONS, "Not enough oracle signatures");
 
@@ -182,5 +183,34 @@ void blubridge::unregchainid( uint8_t chain_id ){
     check(chain != chains_.end(), "Chain ID is already added");
 
     chains_.erase(chain);
+
+}
+
+void blubridge::regsymbol(eosio::asset quantity, std::string memo){
+	
+	require_auth( admin_account_ );
+	auto sym = quantity.symbol;
+    check(sym.is_valid(), "Invalid symbol name");
+
+	auto item = symbolss_.find( sym.raw() );
+	check( item == symbolss_.end(), "Symbol is already registered" );
+
+    symbolss_.emplace(get_self(), [&](auto &c){
+        c.symbol = sym;
+		c.description = memo; 
+    });
+
+}
+
+void blubridge::unregsymbol(eosio::asset quantity){
+	
+	require_auth( admin_account_ );
+	auto sym = quantity.symbol;
+    check(sym.is_valid(), "Invalid symbol name");
+
+	auto item = symbolss_.find( sym.raw() );
+	check( item != symbolss_.end(), "Symbol does not exist" );
+
+    symbolss_.erase( item );
 
 }

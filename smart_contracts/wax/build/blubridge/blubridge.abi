@@ -198,6 +198,20 @@
             ]
         },
         {
+            "name": "regsymbol",
+            "base": "",
+            "fields": [
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
             "name": "send",
             "base": "",
             "fields": [
@@ -238,6 +252,20 @@
             ]
         },
         {
+            "name": "sym_item",
+            "base": "",
+            "fields": [
+                {
+                    "name": "symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "description",
+                    "type": "string"
+                }
+            ]
+        },
+        {
             "name": "unregchainid",
             "base": "",
             "fields": [
@@ -254,6 +282,16 @@
                 {
                     "name": "oracle",
                     "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "unregsymbol",
+            "base": "",
+            "fields": [
+                {
+                    "name": "quantity",
+                    "type": "asset"
                 }
             ]
         }
@@ -285,6 +323,11 @@
             "ricardian_contract": ""
         },
         {
+            "name": "regsymbol",
+            "type": "regsymbol",
+            "ricardian_contract": ""
+        },
+        {
             "name": "send",
             "type": "send",
             "ricardian_contract": ""
@@ -302,6 +345,11 @@
         {
             "name": "unregoracle",
             "type": "unregoracle",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "unregsymbol",
+            "type": "unregsymbol",
             "ricardian_contract": ""
         }
     ],
@@ -323,6 +371,13 @@
         {
             "name": "receipts",
             "type": "receipt_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "symbols",
+            "type": "sym_item",
             "index_type": "i64",
             "key_names": [],
             "key_types": []

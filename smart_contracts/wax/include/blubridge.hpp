@@ -81,6 +81,17 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		typedef eosio::multi_index<"idchain"_n, chain_item> chain_table;
 		chain_table     chains_;
 
+		/* Symbols Registration */
+		struct [[eosio::table("symbols")]]sym_item {
+			eosio::symbol  symbol;
+			std::string  description;
+
+			uint64_t primary_key() const { return symbol.raw(); }
+		};
+		typedef eosio::multi_index<"symbols"_n, sym_item> symbol_table;
+		symbol_table symbolss_;
+
+
 	public:
 		using contract::contract;
 
@@ -96,18 +107,23 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		[[eosio::action]] void logsend(uint64_t id, uint32_t timestamp, name from, asset quantity, uint8_t chain_id, checksum256 to_address);
 		[[eosio::action]] void received(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity);
 
-		//TODO: additional implementations
 		[[eosio::action]] void grantrole(name account);
+
 		[[eosio::action]] void regchainid(uint8_t id, std::string memo);
 		[[eosio::action]] void unregchainid(uint8_t id);
 
-
+		[[eosio::action]] void regsymbol(eosio::asset quantity, std::string memo);
+		[[eosio::action]] void unregsymbol(eosio::asset quantity);
 
 		 using regoracle_action = eosio::action_wrapper<"regoracle"_n, &blubridge::regoracle>;
 		 using unregoracle_action = eosio::action_wrapper<"unregoracle"_n, &blubridge::unregoracle>;
 		 using send_action = eosio::action_wrapper<"send"_n, &blubridge::send>;
 		 using sign_action = eosio::action_wrapper<"sign"_n, &blubridge::sign>;
 		 using receive_action = eosio::action_wrapper<"received"_n, &blubridge::received>;
+		 using regchainid_action = eosio::action_wrapper<"regchainid"_n, &blubridge::regchainid>;
+		 using unregchainid_action = eosio::action_wrapper<"unregchainid"_n, &blubridge::unregchainid>;
+		 using regsymbol_action = eosio::action_wrapper<"regsymbol"_n, &blubridge::regsymbol>;
+		 using unregsymbol_action = eosio::action_wrapper<"unregsymbol"_n, &blubridge::unregsymbol>;
 
 };
 
