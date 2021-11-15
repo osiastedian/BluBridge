@@ -12,7 +12,7 @@ const encoded = web3.eth.abi.encodeParameter(
     propertyOne: 21,
     propertyTwo: 500,
     propertyThree: 1,
-    propertyFour: "0x6283A71E0067695FD8Fc3adF4256d65b4854F73F",
+    propertyFour: "0x6D0aeBE3D6df7FFBd06F6676eecf1Ab7a08895C5",
     propertyFive: "0x6fed937bf288898daf76aca61a074e6613c6e48f",
   }
 );
