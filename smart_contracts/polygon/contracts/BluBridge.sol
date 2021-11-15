@@ -45,11 +45,11 @@ contract TokenBridge is AccessControl {
     );
 
     event Sent(
-        uint256 id,
-        address fromAddress,
-        uint256 amount,
+        uint256 indexed id,
+        address indexed fromAddress,
+        bytes32 indexed toAddress,
         uint8 toChainId,
-        bytes32 toAddress
+        uint256 amount
     );
 
     bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
@@ -163,7 +163,7 @@ contract TokenBridge is AccessControl {
             claimed: false
         });
 
-        emit Sent(id, msg.sender, amount, toChainId, toAddress);
+        emit Sent(id, msg.sender, toAddress, toChainId, amount);
         return id;
     }
 
