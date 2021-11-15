@@ -9,6 +9,7 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 	oracles_(get_self(), get_self().value),
 	chains_(get_self(), get_self().value),
 	symbolss_(get_self(), get_self().value),
+	roles_(get_self(), get_self().value),
 	receipts_(get_self(), get_self().value),
 	transferdata_(get_self(), get_self().value)
 {
@@ -104,7 +105,7 @@ void blubridge::require_oracle( eosio::name account) {
 
 void blubridge::regoracle( eosio::name oracle_name ){
 	
-	require_auth( admin_account_ );
+	require_auth( oracle_name );
     check( is_account(oracle_name), "Oracle account does not exist");
 
     auto oracle = oracles_.find(oracle_name.value);
@@ -116,18 +117,9 @@ void blubridge::regoracle( eosio::name oracle_name ){
     });
 }
 
-void blubridge::grantrole( eosio::name account ){
-
-    require_auth(get_self());
-
-    check( is_account(account), "account does not exist");
-	admin_account_ = account;
-
-}
-
 void blubridge::unregoracle( eosio::name oracle_name ){
 
-	require_auth( admin_account_ );
+	require_auth( oracle_name );
 
     auto oracle = oracles_.find(oracle_name.value);
     check(oracle != oracles_.end(), "Oracle does not exist");
@@ -140,7 +132,7 @@ void blubridge::logsend(uint64_t id, uint32_t timestamp, name from, asset quanti
     require_auth(get_self());
 }
 
-void blubridge::received(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity) {
+void blubridge::claimed(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity) {
     require_oracle(oracle_name);
 
     auto item = transferdata_.find(id);
@@ -149,9 +141,6 @@ void blubridge::received(name oracle_name, uint64_t id, checksum256 to_eth, asse
     check(item->quantity == quantity, "Quantity mismatch");
     check(item->to_address == to_eth, "Account mismatch");
     check(!item->claimed, "Already marked as claimed");
-
-	auto oracle_count = item->oracles.size();
-	check(oracle_count >= ORACLE_CONFIRMATIONS, "Not enough oracle signatures");
 
 	print("starting transfer to external contract");
 	token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
@@ -164,7 +153,7 @@ void blubridge::received(name oracle_name, uint64_t id, checksum256 to_eth, asse
 
 void blubridge::regchainid( uint8_t chain_id, std::string memo ){
 	
-	require_auth( admin_account_ );
+	require_auth( get_self() );
 
     auto chain = chains_.find( chain_id );
     check(chain == chains_.end(), "Chain ID is already added");
@@ -177,7 +166,7 @@ void blubridge::regchainid( uint8_t chain_id, std::string memo ){
 
 void blubridge::unregchainid( uint8_t chain_id ){
 	
-	require_auth( admin_account_ );
+	require_auth( get_self() );
 
     auto chain = chains_.find( chain_id );
     check(chain != chains_.end(), "Chain ID is already added");
@@ -188,7 +177,7 @@ void blubridge::unregchainid( uint8_t chain_id ){
 
 void blubridge::regsymbol(eosio::asset quantity, std::string memo){
 	
-	require_auth( admin_account_ );
+	require_auth( get_self() );
 	auto sym = quantity.symbol;
     check(sym.is_valid(), "Invalid symbol name");
 
@@ -204,7 +193,7 @@ void blubridge::regsymbol(eosio::asset quantity, std::string memo){
 
 void blubridge::unregsymbol(eosio::asset quantity){
 	
-	require_auth( admin_account_ );
+	require_auth( get_self() );
 	auto sym = quantity.symbol;
     check(sym.is_valid(), "Invalid symbol name");
 
@@ -214,3 +203,16 @@ void blubridge::unregsymbol(eosio::asset quantity){
     symbolss_.erase( item );
 
 }
+
+void blubridge::grantrole( eosio::name account, uint8_t role ){
+
+    require_auth(get_self());
+
+    check( is_account(account), "Account does not exist");
+	auto item = roles_.find( account.value );
+	check( item == roles_.end(), "Account already added" );
+
+	admin_account_ = account;
+
+}
+
