@@ -16,7 +16,7 @@ const encoded = web3.eth.abi.encodeParameter(
     propertyOne: 41,
     propertyTwo: 400000000000000,
     propertyThree: 1,
-    propertyFour: '0x6283A71E0067695FD8Fc3adF4256d65b4854F73F',
+    propertyFour: '0x6D0aeBE3D6df7FFBd06F6676eecf1Ab7a08895C5',
     propertyFive: '0xa46f48a39d8e62b9705c24bd9ba08b06ab00676b',
   }
 );

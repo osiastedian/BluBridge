@@ -32,8 +32,8 @@ const logSubscription = {
   params: [
     'logs',
     {
-      address: '0xF6287d13de5c52cd320902C939C188217477F05b',
-      topics: [sentTopic],
+      address: contractAddress,
+      topics: [[claimedTopic, sentTopic]],
     },
   ],
 };
@@ -77,8 +77,6 @@ const claim = ({ id, toAddress, amount, symbol }) => {
     });
 };
 
-let subscriptionId = null;
-
 ws.on('open', () => {
   LOG('Connection Established!', {
     eosOracle,
@@ -94,9 +92,6 @@ ws.on('open', () => {
 ws.on('message', (rawData) => {
   const json = JSON.parse(rawData);
   LOG(JSON.stringify(json));
-  if (json.id === 1) {
-    subscriptionId = json.result;
-  }
   if (!json?.params?.result) {
     return;
   }
@@ -104,10 +99,9 @@ ws.on('message', (rawData) => {
   LOG({ topics, data });
   // eslint-disable-next-line no-unused-vars
   const [topic, ...topicParams] = topics;
-  LOG('TOPIC:', topic);
   if (topic === claimedTopic) {
     const [id, toAddress] = topicParams;
-    const tokenAddress = '0x6283A71E0067695FD8Fc3adF4256d65b4854F73F';
+    const tokenAddress = '0x6D0aeBE3D6df7FFBd06F6676eecf1Ab7a08895C5';
     const tokenInfo = symbolToEthAddressMap[tokenAddress];
     const amount = parseInt(data, 16) / `1e${tokenInfo.polygonDecimals}`;
 
@@ -118,7 +112,7 @@ ws.on('message', (rawData) => {
       symbol: tokenInfo.account,
     });
   } else if (topic === sentTopic) {
-    console.log('HANDLE SENT!');
+    console.log('HANDLE SENT!', );
   }
 });
 
