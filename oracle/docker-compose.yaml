@@ -5,7 +5,7 @@ services:
     image: oracle-base
     command: ['yarn', 'eos']
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0xc07ED4095f0Aa73be6630840055D05ebbf6860B4'
+      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: atyqxmszvnsk
       ORACLE_EOS_PRIVATE_KEY: 5K5fQ4RUVnZmcHxCFE8LgLMJtGkCCHobGYdfMbgF5uv3KJszRiD
@@ -22,7 +22,7 @@ services:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0xc07ED4095f0Aa73be6630840055D05ebbf6860B4'
+      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: wtibpjgqsidc
       ORACLE_EOS_PRIVATE_KEY: 5KNZU2AeW7qkCLwQpSkwPhtTrgevfNaCrDfoFQNmbxc1MoHHSQP
@@ -36,7 +36,7 @@ services:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0xc07ED4095f0Aa73be6630840055D05ebbf6860B4'
+      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: ojynoerkuepk
       ORACLE_EOS_PRIVATE_KEY: 5KhvjHnKYfGiML7DbGHCTuWmRTtrwkPnkyGCZLwVBMSAftd9CGH
@@ -50,7 +50,7 @@ services:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0xc07ED4095f0Aa73be6630840055D05ebbf6860B4'
+      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: hbjsvradtjao
       ORACLE_EOS_PRIVATE_KEY: 5JfkBQSF1VwjDvuNtqG5iytX4ehQJt5J7ESemtBypy1idxHzCKs
@@ -64,7 +64,7 @@ services:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0xc07ED4095f0Aa73be6630840055D05ebbf6860B4'
+      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
       POLYGON_CONTRACT_CLAIMED_TOPIC: '0x4ec90e965519d92681267467f775ada5bd214aa92c0dc93d90a5e880ce9ed026'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: hbjsvradtjao

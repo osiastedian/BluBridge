@@ -81,6 +81,12 @@ contract("Bridge", (accounts) => {
         amount.toNumber() === 2000
     );
     expect(balance.toNumber()).to.be.equal(2000);
+    const transferData = await bridge.transferMap(1);
+    expect(transferData.id.toNumber()).to.be.equal(1);
+    expect(transferData.amount.toNumber()).to.be.equal(2000);
+    expect(transferData.chainId.toNumber()).to.be.equal(3);
+    expect(transferData.tokenAddress).to.be.equal(bluToken.address);
+    expect(transferData.toAddress).to.be.equal(accounts[4]);
   });
 
   describe("sending", async () => {
