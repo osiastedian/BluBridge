@@ -41,15 +41,17 @@ contract TokenBridge is AccessControl {
     event Claimed(
         uint256 indexed id,
         address indexed toAddress,
+        address indexed tokenAddress,
         uint256 amount
     );
 
     event Sent(
         uint256 indexed id,
-        address indexed fromAddress,
+        address indexed tokenAddress,
         bytes32 indexed toAddress,
         uint8 toChainId,
-        uint256 amount
+        uint256 amount,
+        address fromAddress
     );
 
     bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
@@ -163,7 +165,14 @@ contract TokenBridge is AccessControl {
             claimed: false
         });
 
-        emit Sent(id, msg.sender, toAddress, toChainId, amount);
+        emit Sent(
+            id,
+            tokenContractAddress,
+            toAddress,
+            toChainId,
+            amount,
+            msg.sender
+        );
         return id;
     }
 
@@ -221,6 +230,11 @@ contract TokenBridge is AccessControl {
         BridgeERC20 erc20 = BridgeERC20(tokenAddress);
         erc20.mint(msg.sender, transferData.amount);
 
-        emit Claimed(transferData.id, msg.sender, transferData.amount);
+        emit Claimed(
+            transferData.id,
+            msg.sender,
+            tokenAddress,
+            transferData.amount
+        );
     }
 }
