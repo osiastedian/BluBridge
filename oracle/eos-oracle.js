@@ -93,7 +93,7 @@ const generateEthSignature = (transferData) => {
     },
     {
       propertyOne: id,
-      propertyTwo: amount,
+      propertyTwo: `${amount}`,
       propertyThree: chainId,
       propertyFour: tokenAddress,
       propertyFive: toAddress,
