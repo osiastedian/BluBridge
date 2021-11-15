@@ -58,7 +58,7 @@ contract TokenBridge is AccessControl {
     uint256 public minimumOracleConfirmations = 3;
     uint8 public chainId;
 
-    mapping(uint256 => TransferData) public tansferMap;
+    mapping(uint64 => TransferData) public transferMap;
     mapping(address => bool) public supportedTokens;
     mapping(uint8 => bool) public supportedChainIds;
 
@@ -223,13 +223,15 @@ contract TokenBridge is AccessControl {
             "Invalid token address"
         );
 
+        require(transferMap[transferData.id].id == 0, "Transfer already claimed");
+
         require(supportedTokens[tokenAddress], "Unsupported token address");
 
         require(transferData.toAddress == msg.sender, "Not eligible for claim");
 
         BridgeERC20 erc20 = BridgeERC20(tokenAddress);
         erc20.mint(msg.sender, transferData.amount);
-
+        transferMap[transferData.id] = transferData;
         emit Claimed(
             transferData.id,
             msg.sender,
