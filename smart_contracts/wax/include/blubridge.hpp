@@ -1,9 +1,10 @@
 #include <eosio/eosio.hpp>
 #include <eosio/asset.hpp>
+#include <eosio/system.hpp>
 #include <eosio/transaction.hpp>
 #include <vector>
 
-#define ORACLE_CONFIRMATIONS 3
+#define ORACLE_CONFIRMATIONS 4
 
 using namespace eosio;
 using namespace std;
@@ -16,6 +17,8 @@ namespace blu{
 
 class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 	private:
+
+		static constexpr uint64_t admin_role  = 1;
 
 		/* Represents transfer in progress */
 		struct [[eosio::table("transferdata")]] blu_item {
@@ -42,30 +45,19 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		typedef eosio::multi_index<"oracles"_n, oracle_item> oracles_table;
 
 
-		/* Oracles authorised to send receipts */
+		/* External Smart contract notification receipt */
 		struct [[eosio::table("receipts")]] receipt_item {
-			uint64_t				id;
-			eosio::time_point_sec	date;
-			eosio::checksum256		ref;
-			eosio::name				to;
-			uint8_t					chain_id;
-			uint8_t					confirmations;
+			eosio::name			    from_account;
 			eosio::asset			quantity;
-			std::vector<eosio::name>   approvers;
-			bool		            completed;
+			std::string				memo;
 
-			uint64_t    primary_key() const { return id; }
-			uint64_t    by_to() const { return to.value; }
-			eosio::checksum256 by_ref() const { return ref; }
+			uint64_t primary_key() const { return from_account.value; }
 		};
-		typedef eosio::multi_index<"receipts"_n, receipt_item,
-		indexed_by<"byref"_n, const_mem_fun<receipt_item, checksum256, &receipt_item::by_ref>>,
-		indexed_by<"byto"_n, const_mem_fun<receipt_item, uint64_t, &receipt_item::by_to>>
-		> receipts_table;
+		typedef eosio::multi_index<"receipts"_n, receipt_item> receipts_table;
 
 		oracles_table     oracles_;
 		receipts_table    receipts_;
-		transfer_table		  transferdata_;;
+		transfer_table	  transferdata_;;
 
 		void require_oracle( eosio::name account );
 
@@ -84,13 +76,37 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		/* Symbols Registration */
 		struct [[eosio::table("symbols")]]sym_item {
 			eosio::symbol  symbol;
-			std::string  description;
+			eosio::name  contract;
 
 			uint64_t primary_key() const { return symbol.raw(); }
 		};
 		typedef eosio::multi_index<"symbols"_n, sym_item> symbol_table;
 		symbol_table symbolss_;
 
+		/* Account Role Registration */
+		struct [[eosio::table("accountroles")]]role_item {
+			eosio::name  account;
+			uint64_t  role;
+
+			uint64_t primary_key() const { return account.value; }
+		};
+		typedef eosio::multi_index<"accountroles"_n, role_item> role_table;
+		role_table roles_;
+
+
+		/* Received table */
+		struct [[eosio::table("receivedata")]] receive_item {
+			uint64_t				id;
+			eosio::name				to_account;
+			eosio::asset			quantity;
+			int8_t					chain_id;
+			std::vector<eosio::name>	oracles;
+			bool					claimed;
+
+			uint64_t primary_key() const { return id; }
+		};
+		typedef eosio::multi_index<"receivedata"_n, receive_item> receive_table;
+		receive_table receive_;
 
 	public:
 		using contract::contract;
@@ -105,25 +121,35 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		[[eosio::action]] void send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address);
 		[[eosio::action]] void sign(eosio::name oracle_name, uint64_t id, std::string signature);
 		[[eosio::action]] void logsend(uint64_t id, uint32_t timestamp, name from, asset quantity, uint8_t chain_id, checksum256 to_address);
-		[[eosio::action]] void received(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity);
+		[[eosio::action]] void claimed(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity);
 
-		[[eosio::action]] void grantrole(name account);
+		[[eosio::action]] void grantrole(name account, uint8_t roles);
 
 		[[eosio::action]] void regchainid(uint8_t id, std::string memo);
 		[[eosio::action]] void unregchainid(uint8_t id);
 
-		[[eosio::action]] void regsymbol(eosio::asset quantity, std::string memo);
+		[[eosio::action]] void regsymbol(eosio::asset quantity, eosio::name contract);
 		[[eosio::action]] void unregsymbol(eosio::asset quantity);
+
+		[[eosio::action]] void received( uint64_t id, name to_account, uint64_t chain_id,  asset quantity);
+		[[eosio::action]] void claim( uint64_t id );
+		
+
+		// Notification function
+		[[eosio::on_notify("eosio.token::transfer")]]
+		void on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo );
 
 		 using regoracle_action = eosio::action_wrapper<"regoracle"_n, &blubridge::regoracle>;
 		 using unregoracle_action = eosio::action_wrapper<"unregoracle"_n, &blubridge::unregoracle>;
 		 using send_action = eosio::action_wrapper<"send"_n, &blubridge::send>;
 		 using sign_action = eosio::action_wrapper<"sign"_n, &blubridge::sign>;
-		 using receive_action = eosio::action_wrapper<"received"_n, &blubridge::received>;
+		 using claimed_action = eosio::action_wrapper<"claimed"_n, &blubridge::claimed>;
 		 using regchainid_action = eosio::action_wrapper<"regchainid"_n, &blubridge::regchainid>;
 		 using unregchainid_action = eosio::action_wrapper<"unregchainid"_n, &blubridge::unregchainid>;
 		 using regsymbol_action = eosio::action_wrapper<"regsymbol"_n, &blubridge::regsymbol>;
 		 using unregsymbol_action = eosio::action_wrapper<"unregsymbol"_n, &blubridge::unregsymbol>;
+		 using received_action = eosio::action_wrapper<"received"_n, &blubridge::received>;
+		 using claim_action = eosio::action_wrapper<"claim"_n, &blubridge::claim>;
 
 };
 

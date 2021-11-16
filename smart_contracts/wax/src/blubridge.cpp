@@ -11,6 +11,7 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 	symbolss_(get_self(), get_self().value),
 	roles_(get_self(), get_self().value),
 	receipts_(get_self(), get_self().value),
+	receive_(get_self(), get_self().value),
 	transferdata_(get_self(), get_self().value)
 {
 	admin_account_ = "admin1"_n;
@@ -18,6 +19,7 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 
 
 void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
+
     require_auth(from);
 	print("send log");
 
@@ -30,31 +32,16 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
 
 	//Check if symbol is already added in apporved symbols
 	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
-
-	print("starting transfer to external contract");
-	//Modification, transfer token to self
-	//Test call inline function to eosio.token contract
-	// token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
-	// TODO: modify transfer command permission
-	// ---- SET A Working ----
-	token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
-	transfer.send( get_self(), from, quantity, "Amount transferred to self" );
-	// ---- SET A Working ----
-
-	// TODO: IDEAL not yet working
-	// ---- SET B Working ----
-	// token::transfer_action transfer( "eosio.token"_n, { from, "active"_n});
-	// transfer.send( from, get_self(), quantity, "amount transfered from --> self" );
-	// ---- SET B Working ----
-
-
-	//	TODO: working
-	// //send() command links to external contract
-	// // transfer.send( get_self(), "eosio.token"_n, quantity, "Amount transferred to self" );
-	// //TODO: modified send transfer command parameters
-	// transfer.send( from, get_self(), quantity, "Amount transferred to self" ); //TODO: erorr on eosio.code authority for keanne to transfer to blubridge account
-	print("external contract transfer completed");
-
+#if 0
+    auto item = symbolss_.find(quantity.symbol.raw());
+    check(item != symbolss_.end(), "Contract is not found");
+	auto contract_name = item->contract;
+#endif
+	// Start of cross check logic
+    receipts_.get(from.value, "No record found. Transfer to this account first using eosio.token::transfer ");
+    auto item = receipts_.find( from.value );
+	check( quantity <= item->quantity , "Not enough tokens to transfer" );
+	// End of cross check logic
 
     uint64_t transaction_id = transferdata_.available_primary_key();
 	print_f("transaction_id[%]", transaction_id );
@@ -130,6 +117,13 @@ void blubridge::unregoracle( eosio::name oracle_name ){
 void blubridge::logsend(uint64_t id, uint32_t timestamp, name from, asset quantity, uint8_t chain_id, checksum256 eth_address) {
     // Logs the send id for the oracle to listen to
     require_auth(get_self());
+
+	auto item = receipts_.find( from.value );
+
+	//Deduct send tokens from receipt table
+	receipts_.modify(*item, same_payer, [&](auto &t){
+		t.quantity -= quantity;
+	});
 }
 
 void blubridge::claimed(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity) {
@@ -175,18 +169,20 @@ void blubridge::unregchainid( uint8_t chain_id ){
 
 }
 
-void blubridge::regsymbol(eosio::asset quantity, std::string memo){
+void blubridge::regsymbol(eosio::asset quantity, eosio::name contract){
 	
 	require_auth( get_self() );
 	auto sym = quantity.symbol;
+	check(is_account(contract), "Contract account does not exist" );
     check(sym.is_valid(), "Invalid symbol name");
+
 
 	auto item = symbolss_.find( sym.raw() );
 	check( item == symbolss_.end(), "Symbol is already registered" );
 
     symbolss_.emplace(get_self(), [&](auto &c){
         c.symbol = sym;
-		c.description = memo; 
+		c.contract = contract; 
     });
 
 }
@@ -213,6 +209,86 @@ void blubridge::grantrole( eosio::name account, uint8_t role ){
 	check( item == roles_.end(), "Account already added" );
 
 	admin_account_ = account;
+
+}
+
+void blubridge::received( uint64_t id, name to_account, uint64_t chain_id,  asset quantity){
+
+	// name sender = name(eosio::get_sender());
+    // require_oracle( eosio::get_sender() );
+
+    check(quantity.is_valid(), "Amount is not valid");
+    check(quantity.amount > 0, "Amount cannot be negative");
+    check(quantity.symbol.is_valid(), "Invalid symbol name");
+
+	//check if chain_id parameter is registered in table
+	chains_.get(chain_id, "Chain ID is not yet registered. Denying transaction");
+
+	//Check if symbol is already added in apporved symbols
+	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
+
+    receive_.emplace( get_self(), [&](auto &t){
+        t.id = id;
+        t.to_account = to_account;
+        t.quantity = quantity;
+        t.chain_id = chain_id;
+		// t.oracles.push_back( oracle_name );
+        t.claimed = false;
+    });
+
+	print(" send function end ");
+}
+
+void blubridge::claim( uint64_t id ){
+
+	// auto oracle_name = eosio::get_sender();
+    // require_oracle( oracle_name );
+
+    auto item = receive_.find(id);
+    check(item != receive_.end(), "ID is not found");
+	check(!item->claimed, "Already marked as claimed");
+
+	auto oracle_count = item->oracles.size();
+	if( oracle_count >= ORACLE_CONFIRMATIONS ){
+
+		print("starting transfer to external contract");
+		// token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
+		// transfer.send( get_self(), item->account, quantity, "Amount successfully transferred" );
+
+		receive_.modify(*item, same_payer, [&](auto &t){
+			t.claimed = true;
+		});
+	}
+
+}
+
+void blubridge::on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo ){
+
+	print_f("------Notification received from eosio.token !!!!--------" );
+	check( to == get_self(), "We do not own the transaction." );
+
+	//Get structure individual item 
+    auto item = receipts_.find( from.value );
+
+	//Check if symbol is already added in apporved symbols
+	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
+
+	// Account is already added, need to modify the quantity
+	if( item != receipts_.end() ){
+
+		receipts_.modify(*item, same_payer, [&](auto &t){
+			t.quantity += quantity;
+		});
+
+	} else{ // Account is not yet added treat as new item
+
+		receipts_.emplace( get_self(), [&](auto &r){
+			r.from_account = from;
+			r.quantity = quantity;
+			r.memo = memo;
+		});
+
+	}
 
 }
 

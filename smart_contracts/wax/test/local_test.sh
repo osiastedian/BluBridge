@@ -74,6 +74,9 @@ echo -e "${GREEN}transfer initial amount of 1000000 to blubridge account${END}"
 cleos push action eosio.token transfer '["eosio.token","blubridge", "100000 BLU", "Test transfer"]' -p eosio.token@active
 
 
+cleos push action blubridge regchainid '["1234", "initial"]' -p blubridge@active
+cleos push action blubridge  regsymbol '["1 BLU", "eosio.token"]' -p blubridge@active
+
 
 #  blubridge inline transfer test 
 #  Start
