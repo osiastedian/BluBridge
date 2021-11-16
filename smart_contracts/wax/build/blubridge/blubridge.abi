@@ -96,20 +96,6 @@
             ]
         },
         {
-            "name": "grantrole",
-            "base": "",
-            "fields": [
-                {
-                    "name": "account",
-                    "type": "name"
-                },
-                {
-                    "name": "roles",
-                    "type": "uint8"
-                }
-            ]
-        },
-        {
             "name": "logsend",
             "base": "",
             "fields": [
@@ -254,24 +240,6 @@
                 {
                     "name": "quantity",
                     "type": "asset"
-                },
-                {
-                    "name": "contract",
-                    "type": "name"
-                }
-            ]
-        },
-        {
-            "name": "role_item",
-            "base": "",
-            "fields": [
-                {
-                    "name": "account",
-                    "type": "name"
-                },
-                {
-                    "name": "role",
-                    "type": "uint64"
                 }
             ]
         },
@@ -322,10 +290,6 @@
                 {
                     "name": "symbol",
                     "type": "symbol"
-                },
-                {
-                    "name": "contract",
-                    "type": "name"
                 }
             ]
         },
@@ -379,11 +343,6 @@
         {
             "name": "claimed",
             "type": "claimed",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "grantrole",
-            "type": "grantrole",
             "ricardian_contract": ""
         },
         {
@@ -443,13 +402,6 @@
         }
     ],
     "tables": [
-        {
-            "name": "accountroles",
-            "type": "role_item",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
         {
             "name": "idchain",
             "type": "chain_item",

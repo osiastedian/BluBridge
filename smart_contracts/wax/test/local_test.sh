@@ -75,7 +75,7 @@ cleos push action eosio.token transfer '["eosio.token","blubridge", "100000 BLU"
 
 
 cleos push action blubridge regchainid '["1234", "initial"]' -p blubridge@active
-cleos push action blubridge  regsymbol '["1 BLU", "eosio.token"]' -p blubridge@active
+cleos push action blubridge  regsymbol '["1 BLU"]' -p blubridge@active
 
 
 #  blubridge inline transfer test 

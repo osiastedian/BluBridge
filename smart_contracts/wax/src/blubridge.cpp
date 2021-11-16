@@ -9,18 +9,14 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 	oracles_(get_self(), get_self().value),
 	chains_(get_self(), get_self().value),
 	symbolss_(get_self(), get_self().value),
-	roles_(get_self(), get_self().value),
 	receipts_(get_self(), get_self().value),
 	receive_(get_self(), get_self().value),
 	transferdata_(get_self(), get_self().value)
-{
-	admin_account_ = "admin1"_n;
-}
+{}
 
 void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
 
     require_auth(from);
-	print("send log");
 
     check(quantity.is_valid(), "Amount is not valid");
     check(quantity.amount > 0, "Amount cannot be negative");
@@ -31,11 +27,7 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
 
 	//Check if symbol is already added in apporved symbols
 	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
-#if 0
-    auto item = symbolss_.find(quantity.symbol.raw());
-    check(item != symbolss_.end(), "Contract is not found");
-	auto contract_name = item->contract;
-#endif
+
 	// Start of cross check logic
     receipts_.get(from.value, "No record found. Transfer to this account first using eosio.token::transfer ");
     auto item = receipts_.find( from.value );
@@ -55,8 +47,6 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
         t.claimed = false;
     });
 
-	print(" send function end ");
-
     action(
         permission_level{get_self(), "active"_n},
         get_self(), "logsend"_n,
@@ -66,8 +56,7 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
 }
 
 void blubridge::sign( eosio::name oracle_name, uint64_t id, std::string signature ) {
-	// Signs receipt of tokens, these signatures must be passed to the eth blockchain
-	// in the claim function on the eth contract
+
 	require_oracle(oracle_name);
 
 	auto blu = transferdata_.find(id);
@@ -83,11 +72,6 @@ void blubridge::sign( eosio::name oracle_name, uint64_t id, std::string signatur
 	});
 }
 
-/* Private */
-void blubridge::require_oracle( eosio::name account) {
-    require_auth(account);
-    oracles_.get(account.value, "Account is not an oracle");
-}
 
 void blubridge::regoracle( eosio::name oracle_name ){
 	
@@ -168,22 +152,18 @@ void blubridge::unregchainid( uint8_t chain_id ){
 
 }
 
-void blubridge::regsymbol(eosio::asset quantity, eosio::name contract){
+void blubridge::regsymbol(eosio::asset quantity){
 	
 	require_auth( get_self() );
 	auto sym = quantity.symbol;
-	check(is_account(contract), "Contract account does not exist" );
     check(sym.is_valid(), "Invalid symbol name");
-
 
 	auto item = symbolss_.find( sym.raw() );
 	check( item == symbolss_.end(), "Symbol is already registered" );
 
     symbolss_.emplace(get_self(), [&](auto &c){
         c.symbol = sym;
-		c.contract = contract; 
     });
-
 }
 
 void blubridge::unregsymbol(eosio::asset quantity){
@@ -196,19 +176,6 @@ void blubridge::unregsymbol(eosio::asset quantity){
 	check( item != symbolss_.end(), "Symbol does not exist" );
 
     symbolss_.erase( item );
-
-}
-
-void blubridge::grantrole( eosio::name account, uint8_t role ){
-
-    require_auth(get_self());
-
-    check( is_account(account), "Account does not exist");
-	auto item = roles_.find( account.value );
-	check( item == roles_.end(), "Account already added" );
-
-	admin_account_ = account;
-
 }
 
 void blubridge::received( uint64_t id, name to_account, uint8_t chain_id,  asset quantity, name oracle_name){
@@ -221,10 +188,7 @@ void blubridge::received( uint64_t id, name to_account, uint8_t chain_id,  asset
     check(quantity.symbol.is_valid(), "Invalid symbol name");
 
 	//check if chain_id parameter is registered in table
-	// print_f("parameter[%] ", chain_id );
-	// print_f("% ", CONTRACT_CHAIN_ID );
-    // check( chain_id != CONTRACT_CHAIN_ID, "Chain id is not found");
-	chains_.get(chain_id, "Chain ID is not yet registered. Denying transaction");
+    check( chain_id == CONTRACT_CHAIN_ID, "Chain id is not correct");
 
 	//Check if symbol is already added in apporved symbols
 	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
@@ -300,7 +264,6 @@ void blubridge::withdraw( eosio::name from ) {
     auto item = receipts_.find( from.value );
 	check( item->quantity.amount > 0 , "Not enough balance to withdraw" );
 	// End of cross check logic
-	//
 	
 	print_f("Starting transfer to % ", from);
 	//Transfer token from self to issuer
@@ -315,7 +278,7 @@ void blubridge::withdraw( eosio::name from ) {
 
 void blubridge::on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo ){
 
-	print_f("------Notification received from eosio.token !!!!--------" );
+	print_f(" ------Notification received from eosio.token !!!!-------- " );
 
 	if( to != get_self() ) return;
 
@@ -339,6 +302,13 @@ void blubridge::on_token_transfer( eosio::name from, eosio::name to, eosio::asse
 			r.quantity = quantity;
 			r.memo = memo;
 		});
-
 	}
+}
+
+/* 
+ * Private helper function
+ */
+void blubridge::require_oracle( eosio::name account) {
+    require_auth(account);
+    oracles_.get(account.value, "Account is not an oracle");
 }
