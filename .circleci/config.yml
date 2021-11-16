@@ -11,7 +11,9 @@ jobs:
          cd oracle
 
      # build the application image
-     - run: docker build -t osiastedian/blubridge-oracle:$CIRCLE_BRANCH .
+     - run: |
+         cd oracle
+         docker build -t osiastedian/blubridge-oracle:$CIRCLE_BRANCH .
 
      # deploy the image
      - run: docker push osiastedian/blubridge-oracle:$CIRCLE_BRANCH
