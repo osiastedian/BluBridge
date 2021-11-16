@@ -223,7 +223,12 @@ contract TokenBridge is AccessControl {
             "Invalid token address"
         );
 
-        require(transferMap[transferData.id].id == 0, "Transfer already claimed");
+        require(transferData.chainId == chainId, "Not supported chainId");
+
+        require(
+            transferMap[transferData.id].id == 0,
+            "Transfer already claimed"
+        );
 
         require(supportedTokens[tokenAddress], "Unsupported token address");
 
