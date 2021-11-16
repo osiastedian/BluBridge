@@ -64,6 +64,10 @@
             "base": "",
             "fields": [
                 {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
                     "name": "id",
                     "type": "uint64"
                 }
@@ -207,11 +211,15 @@
                 },
                 {
                     "name": "chain_id",
-                    "type": "uint64"
+                    "type": "uint8"
                 },
                 {
                     "name": "quantity",
                     "type": "asset"
+                },
+                {
+                    "name": "oracle_name",
+                    "type": "name"
                 }
             ]
         },
@@ -350,6 +358,16 @@
                     "type": "asset"
                 }
             ]
+        },
+        {
+            "name": "withdraw",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                }
+            ]
         }
     ],
     "actions": [
@@ -416,6 +434,11 @@
         {
             "name": "unregsymbol",
             "type": "unregsymbol",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "withdraw",
+            "type": "withdraw",
             "ricardian_contract": ""
         }
     ],

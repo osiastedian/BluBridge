@@ -17,7 +17,6 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 	admin_account_ = "admin1"_n;
 }
 
-
 void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
 
     require_auth(from);
@@ -92,7 +91,7 @@ void blubridge::require_oracle( eosio::name account) {
 
 void blubridge::regoracle( eosio::name oracle_name ){
 	
-	require_auth( oracle_name );
+	require_auth( get_self() );
     check( is_account(oracle_name), "Oracle account does not exist");
 
     auto oracle = oracles_.find(oracle_name.value);
@@ -106,7 +105,7 @@ void blubridge::regoracle( eosio::name oracle_name ){
 
 void blubridge::unregoracle( eosio::name oracle_name ){
 
-	require_auth( oracle_name );
+	require_auth( get_self() );
 
     auto oracle = oracles_.find(oracle_name.value);
     check(oracle != oracles_.end(), "Oracle does not exist");
@@ -212,60 +211,113 @@ void blubridge::grantrole( eosio::name account, uint8_t role ){
 
 }
 
-void blubridge::received( uint64_t id, name to_account, uint64_t chain_id,  asset quantity){
+void blubridge::received( uint64_t id, name to_account, uint8_t chain_id,  asset quantity, name oracle_name){
 
-	// name sender = name(eosio::get_sender());
-    // require_oracle( eosio::get_sender() );
+	require_auth( oracle_name );
+    require_oracle( oracle_name );
 
     check(quantity.is_valid(), "Amount is not valid");
     check(quantity.amount > 0, "Amount cannot be negative");
     check(quantity.symbol.is_valid(), "Invalid symbol name");
 
 	//check if chain_id parameter is registered in table
+	// print_f("parameter[%] ", chain_id );
+	// print_f("% ", CONTRACT_CHAIN_ID );
+    // check( chain_id != CONTRACT_CHAIN_ID, "Chain id is not found");
 	chains_.get(chain_id, "Chain ID is not yet registered. Denying transaction");
 
 	//Check if symbol is already added in apporved symbols
 	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
 
-    receive_.emplace( get_self(), [&](auto &t){
-        t.id = id;
-        t.to_account = to_account;
-        t.quantity = quantity;
-        t.chain_id = chain_id;
-		// t.oracles.push_back( oracle_name );
-        t.claimed = false;
-    });
+    auto receive_item = receive_.find(id);
+	if( receive_item == receive_.end() ){ // Item is not existing
 
-	print(" send function end ");
+		receive_.emplace( get_self(), [&](auto &t){
+			t.id = id;
+			t.to_account = to_account;
+			t.quantity = quantity;
+			t.chain_id = chain_id;
+			t.oracles.push_back( oracle_name );
+			t.claimed = false;
+		});
+	}else{
+		//Additional checking if oracle already exist
+		auto find_res = std::find(receive_item->oracles.begin(), receive_item->oracles.end(), oracle_name);
+		check(find_res == receive_item->oracles.end(), "Oracle is already recorded");
+
+		receive_.modify(*receive_item, same_payer, [&](auto &t){
+			t.oracles.push_back( oracle_name );
+		});
+	}
 }
 
-void blubridge::claim( uint64_t id ){
+void blubridge::claim( name from, uint64_t id ){
 
-	// auto oracle_name = eosio::get_sender();
-    // require_oracle( oracle_name );
+	require_auth( from );
 
     auto item = receive_.find(id);
     check(item != receive_.end(), "ID is not found");
+	check(item->to_account == from, "User does not own transaction. Cannot claim");
 	check(!item->claimed, "Already marked as claimed");
 
 	auto oracle_count = item->oracles.size();
-	if( oracle_count >= ORACLE_CONFIRMATIONS ){
+	print_f("oracle_count %" , oracle_count );
+	check( oracle_count >= ORACLE_CONFIRMATIONS, "Not enough oracle signatures" );
 
-		print("starting transfer to external contract");
-		// token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
-		// transfer.send( get_self(), item->account, quantity, "Amount successfully transferred" );
+	receive_.modify(*item, same_payer, [&](auto &t){
+		t.claimed = true;
+	});
 
-		receive_.modify(*item, same_payer, [&](auto &t){
-			t.claimed = true;
+	//Get structure individual item 
+    auto receipt_item = receipts_.find( from.value );
+	auto received_item = receive_.find( id );
+
+	// Account is already added, need to modify the quantity
+	if( receipt_item != receipts_.end() ){
+
+		receipts_.modify(*receipt_item, same_payer, [&](auto &t){
+			t.quantity += received_item->quantity;
+			t.memo = "Transferred from polygon";
 		});
-	}
 
+	} else{ // Account is not yet added treat as new item
+
+		receipts_.emplace( get_self(), [&](auto &r){
+			r.from_account = received_item->to_account;
+			r.quantity = received_item->quantity;
+			r.memo = "Transferred from polygon";
+		});
+
+	}
+}
+
+void blubridge::withdraw( eosio::name from ) {
+
+    require_auth(from);
+
+	// Start of cross check logic
+    receipts_.get(from.value, "No record found.");
+    auto item = receipts_.find( from.value );
+	check( item->quantity.amount > 0 , "Not enough balance to withdraw" );
+	// End of cross check logic
+	//
+	
+	print_f("Starting transfer to % ", from);
+	//Transfer token from self to issuer
+	token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
+	transfer.send( get_self(), from, item->quantity, "Amount successfully transferred" );
+
+	//Deduct send tokens from receipt table
+	receipts_.modify(*item, same_payer, [&](auto &t){
+		t.quantity -= item->quantity;
+	});
 }
 
 void blubridge::on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo ){
 
 	print_f("------Notification received from eosio.token !!!!--------" );
-	check( to == get_self(), "We do not own the transaction." );
+
+	if( to != get_self() ) return;
 
 	//Get structure individual item 
     auto item = receipts_.find( from.value );
@@ -289,6 +341,4 @@ void blubridge::on_token_transfer( eosio::name from, eosio::name to, eosio::asse
 		});
 
 	}
-
 }
-

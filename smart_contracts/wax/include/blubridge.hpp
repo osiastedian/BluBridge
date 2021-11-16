@@ -4,8 +4,6 @@
 #include <eosio/transaction.hpp>
 #include <vector>
 
-#define ORACLE_CONFIRMATIONS 4
-
 using namespace eosio;
 using namespace std;
 
@@ -19,6 +17,8 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 	private:
 
 		static constexpr uint64_t admin_role  = 1;
+		static constexpr uint8_t ORACLE_CONFIRMATIONS = 2;
+		static constexpr uint8_t CONTRACT_CHAIN_ID = 1;
 
 		/* Represents transfer in progress */
 		struct [[eosio::table("transferdata")]] blu_item {
@@ -131,8 +131,10 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		[[eosio::action]] void regsymbol(eosio::asset quantity, eosio::name contract);
 		[[eosio::action]] void unregsymbol(eosio::asset quantity);
 
-		[[eosio::action]] void received( uint64_t id, name to_account, uint64_t chain_id,  asset quantity);
-		[[eosio::action]] void claim( uint64_t id );
+		[[eosio::action]] void received( uint64_t id, name to_account, uint8_t chain_id,  asset quantity, name oracle_name);
+		[[eosio::action]] void claim( name from, uint64_t id );
+
+		[[eosio::action]] void withdraw( eosio::name from );
 		
 
 		// Notification function
