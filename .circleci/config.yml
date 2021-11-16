@@ -24,5 +24,8 @@ workflows:
     jobs:
       - build:
           filters:
+            branches:
+              only:
+                - master
             tags:
               only: /.*/
