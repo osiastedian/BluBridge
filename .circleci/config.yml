@@ -3,6 +3,9 @@ jobs:
   build:
     machine: true
     filters:
+      branches:
+        only:
+          - master
       tags:
         only: /^v.*/
     steps:
@@ -16,7 +19,7 @@ jobs:
       # build the application image
       - run: |
           cd oracle
-          docker build -t osiastedian/blubridge-oracle:$CIRCLE_BRANCH .
+          docker build -t osiastedian/blubridge-oracle:$CIRCLE_TAG .
 
       # deploy the image
-      - run: docker push osiastedian/blubridge-oracle:$CIRCLE_BRANCH
+      - run: docker push osiastedian/blubridge-oracle:$CIRCLE_TAG
