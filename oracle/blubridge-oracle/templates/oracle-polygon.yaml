@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-oracle-polygon
+spec:
+  template:
+    metadata:
+      labels:
+        app: oracle-polygon
+    spec:
+      containers:
+        - name: oracle-polygon
+          image: {{ .Values.eos.image }}
+          command: ['yarn', 'polygon']
+          imagePullPolicy: Always
+          env:
+            - name: POLYGON_API_ENDPOINT
+              value: {{ .Values.endpoints.polygon.https }}
+            - name: POLYGON_WS_ENDPOINT
+              value: {{ .Values.endpoints.polygon.wss }}
+            - name: POLYGON_CONTRACT_ADDRESS
+              value: {{ .Values.contract.polygon }}
+            - name: EOS_API_ENDPOINT
+              value: {{ .Values.endpoints.eos.https }}
+            - name: EOS_CONTRACT_ACCOUNT
+              value: {{ .Values.contract.eos }}
+            - name: DFUSE_API_KEY
+              value: {{ .Values.dfuse.apiKey }}
+            - name: DFUSE_NETWORK
+              value: {{ .Values.dfuse.network }}
+            - name: ORACLE_EOS_ACCOUNT
+              value: {{ .Values.eosAccount  }}
+            - name: ORACLE_EOS_PRIVATE_KEY
+              value: {{ .Values.eosPrivateKey  }}
+            - name: ORACLE_POLYGON_ADDRESS
+              value: {{ .Values.polygonAddress  }}
+            - name: ORACLE_POLYGON_PRIVATE_KEY
+              value: {{ .Values.polygonPrivateKey  }}
+      restartPolicy: OnFailure
+  backoffLimit: 4
