@@ -1,13 +1,13 @@
 version: 2
 jobs:
   build:
-    machine: true
     filters:
       branches:
         only:
           - master
       tags:
         only: /^v.*/
+    machine: true
     steps:
       - checkout
       # start proprietary DB using private Docker image
