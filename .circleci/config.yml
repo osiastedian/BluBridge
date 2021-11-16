@@ -1,12 +1,6 @@
 version: 2
 jobs:
   build:
-    filters:
-      branches:
-        only:
-          - master
-      tags:
-        only: /^v.*/
     machine: true
     steps:
       - checkout
@@ -23,3 +17,15 @@ jobs:
 
       # deploy the image
       - run: docker push osiastedian/blubridge-oracle:$CIRCLE_TAG
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+            tags:
+              only: /.*/
