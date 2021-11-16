@@ -1,0 +1,22 @@
+endpoints:
+  polygon:
+    https: https://matic-mumbai.chainstacklabs.com/
+    wss: wss://polygon-mumbai.g.alchemy.com/v2/_apikey
+  eos:
+    https: https://api.testnet.eos.io
+
+dfuse:
+  apiKey: dfuse_apikey
+  network: testnet.eos.dfuse.io
+
+contract:
+  polygon: "0x212fd1159f219421715B6bb7aAa96e3C5695bf1B"
+  eos: bvctvozrlgrg
+
+eos:
+  image: "osiastedian/blubridge-oracle:1.0.5"
+
+eosAccount: alice
+eosPrivateKey: 5KNZU2AeW.....
+polygonAddress: "0xd4038C9....."
+polygonPrivateKey: 65ec14.....
