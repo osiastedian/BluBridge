@@ -15,8 +15,8 @@ import symbolToEthAddressMap from './eos-token-map.js';
 dotenv.config();
 
 const bridgeContract = process.env.EOS_CONTRACT_ACCOUNT;
-const logsendAction = process.env.EOS_CONTRACT_ACTION_LOGSEND;
-const signAction = process.env.EOS_CONTRACT_ACTION_SIGN;
+const logsendAction = 'logsend';
+const signAction = 'sign';
 const oracleAccount = process.env.ORACLE_EOS_ACCOUNT;
 
 const web3 = new Web3(process.env.POLYGON_API_ENDPOINT);
@@ -93,7 +93,7 @@ const generateEthSignature = (transferData) => {
     },
     {
       propertyOne: id,
-      propertyTwo: `${amount}`,
+      propertyTwo: web3.utils.toBN(web3.utils.toWei(`${amount}`, 'ether')),
       propertyThree: chainId,
       propertyFour: tokenAddress,
       propertyFive: toAddress,
@@ -168,8 +168,7 @@ const run = async () => {
             id,
             chainId,
             toAddress: toAddress.replace('000000000000000000000000', '0x'),
-            amount:
-              amount * `1e${token.polygonDecimals}`,
+            amount,
             tokenAddress: token.address,
           };
           LOG('Received Sent:', parsedData);
