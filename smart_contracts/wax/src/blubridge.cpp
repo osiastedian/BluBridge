@@ -1,5 +1,4 @@
 #include <blubridge.hpp>
-#include "eosio.token/eosio.token.hpp"
 
 using namespace blu;
 using namespace eosio;
@@ -29,7 +28,7 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
 	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
 
 	// Start of cross check logic
-    receipts_.get(from.value, "No record found. Transfer to this account first using eosio.token::transfer ");
+    receipts_.get(from.value, "No record found. Transfer to this account first using bludactoken::transfer ");
     auto item = receipts_.find( from.value );
 	check( quantity <= item->quantity , "Not enough tokens to transfer" );
 	// End of cross check logic
@@ -120,8 +119,17 @@ void blubridge::claimed(name oracle_name, uint64_t id, checksum256 to_eth, asset
     check(!item->claimed, "Already marked as claimed");
 
 	print("starting transfer to external contract");
-	token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
-	transfer.send( get_self(), item->account, quantity, "Amount successfully transferred" );
+	// token::transfer_action transfer( "bludactokens"_n, { get_self(), "active"_n});
+	// transfer.send( get_self(), item->account, quantity, "Amount successfully transferred" );
+
+	eosio::transaction txn{};
+	txn.actions.emplace_back(
+        eosio::permission_level( get_self(), "active"_n),
+        tokencontract,
+        "transfer"_n,
+        std::make_tuple(get_self(), item->account, quantity, "Amount sucessfully transferred")
+	);
+	txn.send( id, get_self());
 	
 	transferdata_.modify(*item, same_payer, [&](auto &t){
 		t.claimed = true;
@@ -265,10 +273,18 @@ void blubridge::withdraw( eosio::name from ) {
 	check( item->quantity.amount > 0 , "Not enough balance to withdraw" );
 	// End of cross check logic
 	
-	print_f("Starting transfer to % ", from);
 	//Transfer token from self to issuer
-	token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
-	transfer.send( get_self(), from, item->quantity, "Amount successfully transferred" );
+	// token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
+	// transfer.send( get_self(), from, item->quantity, "Amount successfully transferred" );
+	
+	eosio::transaction txn{};
+	txn.actions.emplace_back(
+        eosio::permission_level( get_self(), "active"_n),
+        tokencontract,
+        "transfer"_n,
+        std::make_tuple(get_self(), from, item->quantity, "Amount sucessfully transferred")
+	);
+	txn.send( from.value , get_self());
 
 	//Deduct send tokens from receipt table
 	receipts_.modify(*item, same_payer, [&](auto &t){
@@ -278,7 +294,6 @@ void blubridge::withdraw( eosio::name from ) {
 
 void blubridge::on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo ){
 
-	print_f(" ------Notification received from eosio.token !!!!-------- " );
 
 	if( to != get_self() ) return;
 

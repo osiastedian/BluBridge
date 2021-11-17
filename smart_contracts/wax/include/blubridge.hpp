@@ -21,6 +21,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		 */
 		static constexpr uint8_t ORACLE_CONFIRMATIONS = 2;
 		static constexpr uint8_t CONTRACT_CHAIN_ID = 1;
+		const eosio::name tokencontract { "eosio.token"_n }; 
 
 		/* 
 		 * Description: 
