@@ -2,7 +2,6 @@
 #include <eosio/asset.hpp>
 #include <eosio/system.hpp>
 #include <eosio/transaction.hpp>
-#include <vector>
 
 using namespace eosio;
 using namespace std;
@@ -21,7 +20,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		 */
 		static constexpr uint8_t ORACLE_CONFIRMATIONS = 2;
 		static constexpr uint8_t CONTRACT_CHAIN_ID = 1;
-		const eosio::name tokencontract { "eosio.token"_n }; 
+		const eosio::name tokencontract { "bludactokens"_n }; 
 
 		/* 
 		 * Description: 
@@ -243,7 +242,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		 * Notification function listening to specified smart contract in annotation
 		 * Trigger only when a transferred action is sent in eosio.token smart contract
 		 */
-		[[eosio::on_notify("eosio.token::transfer")]]
+		[[eosio::on_notify("bludactokens::transfer")]]
 		void on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo );
 };
 }
