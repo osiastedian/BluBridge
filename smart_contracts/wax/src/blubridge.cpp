@@ -7,8 +7,8 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 	contract(s, code, ds),
 	oracles_(get_self(), get_self().value),
 	chains_(get_self(), get_self().value),
-	symbolss_(get_self(), get_self().value),
-	receipts_(get_self(), get_self().value),
+	symbols_(get_self(), get_self().value),
+	balances_(get_self(), get_self().value),
 	receive_(get_self(), get_self().value),
 	transferdata_(get_self(), get_self().value)
 {}
@@ -25,11 +25,11 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
 	chains_.get(chain_id, "Chain ID is not yet registered. Denying transaction");
 
 	//Check if symbol is already added in apporved symbols
-	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
+	symbols_.get(quantity.symbol.raw(), "Symbol is not yet registered");
 
 	// Start of cross check logic
-    receipts_.get(from.value, "No record found. Transfer to this account first using bludactoken::transfer ");
-    auto item = receipts_.find( from.value );
+    balances_.get(from.value, "No record found. Transfer to this account first using bludactoken::transfer ");
+    auto item = balances_.find( from.value );
 	check( quantity <= item->quantity , "Not enough tokens to transfer" );
 	// End of cross check logic
 
@@ -100,10 +100,10 @@ void blubridge::logsend(uint64_t id, uint32_t timestamp, name from, asset quanti
     // Logs the send id for the oracle to listen to
     require_auth(get_self());
 
-	auto item = receipts_.find( from.value );
+	auto item = balances_.find( from.value );
 
 	//Deduct send tokens from receipt table
-	receipts_.modify(*item, same_payer, [&](auto &t){
+	balances_.modify(*item, same_payer, [&](auto &t){
 		t.quantity -= quantity;
 	});
 }
@@ -117,19 +117,6 @@ void blubridge::claimed(name oracle_name, uint64_t id, checksum256 to_eth, asset
     check(item->quantity == quantity, "Quantity mismatch");
     check(item->to_address == to_eth, "Account mismatch");
     check(!item->claimed, "Already marked as claimed");
-
-	print("starting transfer to external contract");
-	// token::transfer_action transfer( "bludactokens"_n, { get_self(), "active"_n});
-	// transfer.send( get_self(), item->account, quantity, "Amount successfully transferred" );
-
-	eosio::transaction txn{};
-	txn.actions.emplace_back(
-        eosio::permission_level( get_self(), "active"_n),
-        tokencontract,
-        "transfer"_n,
-        std::make_tuple(get_self(), item->account, quantity, "Amount sucessfully transferred")
-	);
-	txn.send( id, get_self());
 	
 	transferdata_.modify(*item, same_payer, [&](auto &t){
 		t.claimed = true;
@@ -154,7 +141,7 @@ void blubridge::unregchainid( uint8_t chain_id ){
 	require_auth( get_self() );
 
     auto chain = chains_.find( chain_id );
-    check(chain != chains_.end(), "Chain ID is already added");
+    check(chain != chains_.end(), "Chain ID is not added");
 
     chains_.erase(chain);
 
@@ -166,10 +153,10 @@ void blubridge::regsymbol(eosio::asset quantity){
 	auto sym = quantity.symbol;
     check(sym.is_valid(), "Invalid symbol name");
 
-	auto item = symbolss_.find( sym.raw() );
-	check( item == symbolss_.end(), "Symbol is already registered" );
+	auto item = symbols_.find( sym.raw() );
+	check( item == symbols_.end(), "Symbol is already registered" );
 
-    symbolss_.emplace(get_self(), [&](auto &c){
+    symbols_.emplace(get_self(), [&](auto &c){
         c.symbol = sym;
     });
 }
@@ -180,10 +167,10 @@ void blubridge::unregsymbol(eosio::asset quantity){
 	auto sym = quantity.symbol;
     check(sym.is_valid(), "Invalid symbol name");
 
-	auto item = symbolss_.find( sym.raw() );
-	check( item != symbolss_.end(), "Symbol does not exist" );
+	auto item = symbols_.find( sym.raw() );
+	check( item != symbols_.end(), "Symbol does not exist" );
 
-    symbolss_.erase( item );
+    symbols_.erase( item );
 }
 
 void blubridge::received( uint64_t id, name to_account, uint8_t chain_id,  asset quantity, name oracle_name){
@@ -199,7 +186,7 @@ void blubridge::received( uint64_t id, name to_account, uint8_t chain_id,  asset
     check( chain_id == CONTRACT_CHAIN_ID, "Chain id is not correct");
 
 	//Check if symbol is already added in apporved symbols
-	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
+	symbols_.get(quantity.symbol.raw(), "Symbol is not yet registered");
 
     auto receive_item = receive_.find(id);
 	if( receive_item == receive_.end() ){ // Item is not existing
@@ -241,22 +228,21 @@ void blubridge::claim( name from, uint64_t id ){
 	});
 
 	//Get structure individual item 
-    auto receipt_item = receipts_.find( from.value );
-	auto received_item = receive_.find( id );
+    auto receipt_item = balances_.find( from.value );
 
 	// Account is already added, need to modify the quantity
-	if( receipt_item != receipts_.end() ){
+	if( receipt_item != balances_.end() ){
 
-		receipts_.modify(*receipt_item, same_payer, [&](auto &t){
-			t.quantity += received_item->quantity;
+		balances_.modify(*receipt_item, same_payer, [&](auto &t){
+			t.quantity += item->quantity;
 			t.memo = "Transferred from polygon";
 		});
 
 	} else{ // Account is not yet added treat as new item
 
-		receipts_.emplace( get_self(), [&](auto &r){
-			r.from_account = received_item->to_account;
-			r.quantity = received_item->quantity;
+		balances_.emplace( get_self(), [&](auto &r){
+			r.from_account = item->to_account;
+			r.quantity = item->quantity;
 			r.memo = "Transferred from polygon";
 		});
 
@@ -268,14 +254,10 @@ void blubridge::withdraw( eosio::name from ) {
     require_auth(from);
 
 	// Start of cross check logic
-    receipts_.get(from.value, "No record found.");
-    auto item = receipts_.find( from.value );
+    balances_.get(from.value, "No record found.");
+    auto item = balances_.find( from.value );
 	check( item->quantity.amount > 0 , "Not enough balance to withdraw" );
 	// End of cross check logic
-	
-	//Transfer token from self to issuer
-	// token::transfer_action transfer( "eosio.token"_n, { get_self(), "active"_n});
-	// transfer.send( get_self(), from, item->quantity, "Amount successfully transferred" );
 	
 	eosio::transaction txn{};
 	txn.actions.emplace_back(
@@ -287,7 +269,7 @@ void blubridge::withdraw( eosio::name from ) {
 	txn.send( from.value , get_self());
 
 	//Deduct send tokens from receipt table
-	receipts_.modify(*item, same_payer, [&](auto &t){
+	balances_.modify(*item, same_payer, [&](auto &t){
 		t.quantity -= item->quantity;
 	});
 }
@@ -298,21 +280,21 @@ void blubridge::on_token_transfer( eosio::name from, eosio::name to, eosio::asse
 	if( to != get_self() ) return;
 
 	//Get structure individual item 
-    auto item = receipts_.find( from.value );
+    auto item = balances_.find( from.value );
 
 	//Check if symbol is already added in apporved symbols
-	symbolss_.get(quantity.symbol.raw(), "Symbol is not yet registered");
+	symbols_.get(quantity.symbol.raw(), "Symbol is not yet registered");
 
 	// Account is already added, need to modify the quantity
-	if( item != receipts_.end() ){
+	if( item != balances_.end() ){
 
-		receipts_.modify(*item, same_payer, [&](auto &t){
+		balances_.modify(*item, same_payer, [&](auto &t){
 			t.quantity += quantity;
 		});
 
 	} else{ // Account is not yet added treat as new item
 
-		receipts_.emplace( get_self(), [&](auto &r){
+		balances_.emplace( get_self(), [&](auto &r){
 			r.from_account = from;
 			r.quantity = quantity;
 			r.memo = memo;

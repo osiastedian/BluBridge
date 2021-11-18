@@ -70,7 +70,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 			uint64_t primary_key() const { return from_account.value; }
 		};
 		typedef eosio::multi_index<"receipts"_n, receipt_item> receipts_table;
-		receipts_table    receipts_;
+		receipts_table    balances_;
 
 		/* 
 		 * Description: 
@@ -95,7 +95,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 			uint64_t primary_key() const { return symbol.raw(); }
 		};
 		typedef eosio::multi_index<"symbols"_n, sym_item> symbol_table;
-		symbol_table symbolss_;
+		symbol_table symbols_;
 
 		/* 
 		 * Description: 
