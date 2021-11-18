@@ -1,7 +1,7 @@
 #include <eosio/eosio.hpp>
 #include <eosio/asset.hpp>
+#include <eosio/system.hpp>
 #include <eosio/transaction.hpp>
-#include <vector>
 
 using namespace eosio;
 using namespace std;
@@ -15,8 +15,19 @@ namespace blu{
 class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 	private:
 
-		/* Represents transfer in progress */
-		struct [[eosio::table("blu")]] blu_item {
+		/* 
+		 *	Definition of constants used in smart contract
+		 */
+		static constexpr uint8_t ORACLE_CONFIRMATIONS = 2;
+		static constexpr uint8_t CONTRACT_CHAIN_ID = 1;
+		const eosio::name tokencontract { "bludactokens"_n }; 
+
+		/* 
+		 * Description: 
+		 *		Represents transfer in progress 
+		 *		Holds the send/transfer data
+		 */
+		struct [[eosio::table("transferdata")]] blu_item {
 			uint64_t				id;
 			uint32_t				time;
 			eosio::name			    account;
@@ -29,75 +40,209 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 
 			uint64_t primary_key() const { return id; }
 		};
-		typedef eosio::multi_index<"blu"_n, blu_item> blu_table;
+		typedef eosio::multi_index<"transferdata"_n, blu_item> transfer_table;
+		transfer_table	  transferdata_;;
 
-		/* Oracles authorised to send receipts */
+		/* 
+		 * Description: 
+		 *		Represents oracle list
+		 *		Holds the registered oracle accounts
+		 */
 		struct [[eosio::table("oracles")]] oracle_item {
 			eosio::name  account;
 
 			uint64_t primary_key() const { return account.value; }
 		};
 		typedef eosio::multi_index<"oracles"_n, oracle_item> oracles_table;
-
-
-		/* Oracles authorised to send receipts */
-		struct [[eosio::table("receipts")]] receipt_item {
-			uint64_t				id;
-			eosio::time_point_sec	date;
-			eosio::checksum256		ref;
-			eosio::name				to;
-			uint8_t					chain_id;
-			uint8_t					confirmations;
-			eosio::asset			quantity;
-			std::vector<eosio::name>   approvers;
-			bool		            completed;
-
-			uint64_t    primary_key() const { return id; }
-			uint64_t    by_to() const { return to.value; }
-			eosio::checksum256 by_ref() const { return ref; }
-		};
-		typedef eosio::multi_index<"receipts"_n, receipt_item,
-		indexed_by<"byref"_n, const_mem_fun<receipt_item, checksum256, &receipt_item::by_ref>>,
-		indexed_by<"byto"_n, const_mem_fun<receipt_item, uint64_t, &receipt_item::by_to>>
-		> receipts_table;
-
 		oracles_table     oracles_;
-		receipts_table    receipts_;
-		blu_table		  bludata_;;
 
+		/* 
+		 * Description: 
+		 *		Storage for every notification received on specified smart contract
+		 *		Holds the notified data to be stored
+		 *		Used in send, withdraw and claim functions
+		 */
+		struct [[eosio::table("receipts")]] receipt_item {
+			eosio::name			    from_account;
+			eosio::asset			quantity;
+			std::string				memo;
+
+			uint64_t primary_key() const { return from_account.value; }
+		};
+		typedef eosio::multi_index<"receipts"_n, receipt_item> receipts_table;
+		receipts_table    receipts_;
+
+		/* 
+		 * Description: 
+		 *		Chain ID registration for SEND action
+		 */
+		struct [[eosio::table("idchain")]] chain_item {
+			uint64_t  chain_id;
+			std::string  description;
+
+			uint64_t primary_key() const { return chain_id; }
+		};
+		typedef eosio::multi_index<"idchain"_n, chain_item> chain_table;
+		chain_table     chains_;
+
+		/* 
+		 * Description: 
+		 *		Symbols registration
+		 */
+		struct [[eosio::table("symbols")]]sym_item {
+			eosio::symbol  symbol;
+
+			uint64_t primary_key() const { return symbol.raw(); }
+		};
+		typedef eosio::multi_index<"symbols"_n, sym_item> symbol_table;
+		symbol_table symbolss_;
+
+		/* 
+		 * Description: 
+		 *		Storage of data from Polygon smart contract
+		 */
+		struct [[eosio::table("receivedata")]] receive_item {
+			uint64_t				id;
+			eosio::name				to_account;
+			eosio::asset			quantity;
+			int8_t					chain_id;
+			std::vector<eosio::name>	oracles;
+			bool					claimed;
+
+			uint64_t primary_key() const { return id; }
+		};
+		typedef eosio::multi_index<"receivedata"_n, receive_item> receive_table;
+		receive_table receive_;
+
+		/* 
+		 * Description: 
+		 *		Helper function to check account is oracle
+		 */
 		void require_oracle( eosio::name account );
 
 	public:
 		using contract::contract;
 
-		// Constructor declaration
+		/* 
+		 * Description: 
+		 *		Constructor declaration
+		 */
 		blubridge(name s, name code, datastream<const char *> ds);
 
-		// Registering Oracle
+		/* 
+		 *	Actions for oracle registration
+		 *	parameters:
+		 *		eosio::name oracle  - the oracle to register
+		 */
 		[[eosio::action]] void regoracle( eosio::name oracle );
+		using regoracle_action = eosio::action_wrapper<"regoracle"_n, &blubridge::regoracle>;
+
+		/* 
+		 *	Actions for oracle unregistration
+		 *	parameters:
+		 *		eosio::name oracle  - the oracle to unregister
+		 */
 		[[eosio::action]] void unregoracle( eosio::name oracle );
-
-		[[eosio::action]] void send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address);
-		[[eosio::action]] void sign(eosio::name oracle_name, uint64_t id, std::string signature);
-		[[eosio::action]] void logsend(uint64_t id, uint32_t timestamp, name from, asset quantity, uint8_t chain_id, checksum256 to_address);
-		[[eosio::action]] void received(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity);
-
-		 using regoracle_action = eosio::action_wrapper<"regoracle"_n, &blubridge::regoracle>;
 		 using unregoracle_action = eosio::action_wrapper<"unregoracle"_n, &blubridge::unregoracle>;
+
+		/* 
+		 *	Actions for Sending
+		 *	parameters:
+		 *		eosio::name from		- the oracle to unregister
+		 *		eosio::asset quantity	- quantity to send
+		 *		uint8_t		chain_id	- *Register chain_id first to use using the regchainid action
+		 *		eosio::checksum256		eth_address	- the address to send to 
+		 */
+		[[eosio::action]] void send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address);
 		 using send_action = eosio::action_wrapper<"send"_n, &blubridge::send>;
+
+		/* 
+		 *	Actions triggered by oracle to sign transaction
+		 *	parameters:
+		 *		eosio::name oracle_name	- the oracle account
+		 *		uint64_t	id			- id of the transaction
+		 *		std::string signature	- Signature generated by oracle
+		 */
+		[[eosio::action]] void sign(eosio::name oracle_name, uint64_t id, std::string signature);
 		 using sign_action = eosio::action_wrapper<"sign"_n, &blubridge::sign>;
 
+		/* 
+		 *	Actions Listened to by oracle
+		 *	Triggered from inside send action only
+		 */
+		[[eosio::action]] void logsend(uint64_t id, uint32_t timestamp, name from, asset quantity, uint8_t chain_id, checksum256 to_address);
+		 using logsend_action = eosio::action_wrapper<"logsend"_n, &blubridge::logsend>;
 
-		//Debug functions
-		[[eosio::action]] void dsearchid( uint64_t id );
-		[[eosio::action]] void dsearchoracle( eosio::name name );
-		[[eosio::action]] void dsearchname( eosio::name name );
+		/* 
+		 *	Action to mark transfer data as claimed
+		 *	parameters:
+		 *		eosio::name oracle_name	- the oracle account
+		 *		uint64_t	id			- id of the transaction
+		 *		checksum256	to_eth		- the address of the eth wallet, match with stored address in transfer table
+		 *		eosio::asset quantity 	- Amount to be claimed
+		 */
+		[[eosio::action]] void claimed(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity);
+		 using claimed_action = eosio::action_wrapper<"claimed"_n, &blubridge::claimed>;
 
-		 //Debug functions
-		 using dsearchid_action = eosio::action_wrapper<"dsearchid"_n, &blubridge::dsearchid>;
-		 using dsearchoracle_action = eosio::action_wrapper<"dsearchoracle"_n, &blubridge::dsearchoracle>;
-		 using dsearchname_action = eosio::action_wrapper<"dsearchname"_n, &blubridge::dsearchname>;
+		/* 
+		 *	Action to register chain ID
+		 */
+		[[eosio::action]] void regchainid(uint8_t id, std::string memo);
+		 using regchainid_action = eosio::action_wrapper<"regchainid"_n, &blubridge::regchainid>;
 
+		/* 
+		 *	Action to unregister chain ID
+		 */
+		[[eosio::action]] void unregchainid(uint8_t id);
+		 using unregchainid_action = eosio::action_wrapper<"unregchainid"_n, &blubridge::unregchainid>;
+
+		/* 
+		 *	Action to register symbol
+		 */
+		[[eosio::action]] void regsymbol(eosio::asset quantity);
+		 using regsymbol_action = eosio::action_wrapper<"regsymbol"_n, &blubridge::regsymbol>;
+
+		/* 
+		 *	Action to unregister symbol
+		 */
+		[[eosio::action]] void unregsymbol(eosio::asset quantity);
+		 using unregsymbol_action = eosio::action_wrapper<"unregsymbol"_n, &blubridge::unregsymbol>;
+
+		/* 
+		 * Action to receive transaction from Polygon smart contract
+		 * Successful transaction will be stored in receive_table
+		 *	parameters:
+		 *		uint64_t	id			- id of the transaction
+		 *		eosio::name	to_account	- the account to send
+		 *		uint8_t	 chain_id		- Must match the contract's defined chain_id
+		 *		eosio::asset quantity 	- Amount to be Received
+		 *		eosio::name oracle_name	- the oracle account
+		 */
+		[[eosio::action]] void received( uint64_t id, name to_account, uint8_t chain_id,  asset quantity, name oracle_name);
+		 using received_action = eosio::action_wrapper<"received"_n, &blubridge::received>;
+
+		/* 
+		 * Action to claim stored transactions in receipts table
+		 *	parameters:
+		 *		eosio::name	from		- the account initiating the claim
+		 *		uint64_t	id			- id of the transaction
+		 */
+		[[eosio::action]] void claim( name from, uint64_t id );
+		 using claim_action = eosio::action_wrapper<"claim"_n, &blubridge::claim>;
+
+		/* 
+		 * Action to withdraw items in the receipts table
+		 *	parameters:
+		 *		eosio::name	from		- the account initiating withdrawal
+		 */
+		[[eosio::action]] void withdraw( eosio::name from );
+		 using withdraw_action = eosio::action_wrapper<"withdraw"_n, &blubridge::withdraw>;
+
+		/* 
+		 * Notification function listening to specified smart contract in annotation
+		 * Trigger only when a transferred action is sent in eosio.token smart contract
+		 */
+		[[eosio::on_notify("bludactokens::transfer")]]
+		void on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo );
 };
-
 }

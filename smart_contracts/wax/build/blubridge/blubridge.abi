@@ -46,6 +46,34 @@
             ]
         },
         {
+            "name": "chain_item",
+            "base": "",
+            "fields": [
+                {
+                    "name": "chain_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "description",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "claim",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
             "name": "claimed",
             "base": "",
             "fields": [
@@ -64,36 +92,6 @@
                 {
                     "name": "quantity",
                     "type": "asset"
-                }
-            ]
-        },
-        {
-            "name": "dsearchid",
-            "base": "",
-            "fields": [
-                {
-                    "name": "id",
-                    "type": "uint64"
-                }
-            ]
-        },
-        {
-            "name": "dsearchname",
-            "base": "",
-            "fields": [
-                {
-                    "name": "name",
-                    "type": "name"
-                }
-            ]
-        },
-        {
-            "name": "dsearchoracle",
-            "base": "",
-            "fields": [
-                {
-                    "name": "name",
-                    "type": "name"
                 }
             ]
         },
@@ -142,19 +140,59 @@
             "base": "",
             "fields": [
                 {
+                    "name": "from_account",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "receive_item",
+            "base": "",
+            "fields": [
+                {
                     "name": "id",
                     "type": "uint64"
                 },
                 {
-                    "name": "date",
-                    "type": "time_point_sec"
+                    "name": "to_account",
+                    "type": "name"
                 },
                 {
-                    "name": "ref",
-                    "type": "checksum256"
+                    "name": "quantity",
+                    "type": "asset"
                 },
                 {
-                    "name": "to",
+                    "name": "chain_id",
+                    "type": "int8"
+                },
+                {
+                    "name": "oracles",
+                    "type": "name[]"
+                },
+                {
+                    "name": "claimed",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "received",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "to_account",
                     "type": "name"
                 },
                 {
@@ -162,20 +200,26 @@
                     "type": "uint8"
                 },
                 {
-                    "name": "confirmations",
-                    "type": "uint8"
-                },
-                {
                     "name": "quantity",
                     "type": "asset"
                 },
                 {
-                    "name": "approvers",
-                    "type": "name[]"
+                    "name": "oracle_name",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "regchainid",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint8"
                 },
                 {
-                    "name": "completed",
-                    "type": "bool"
+                    "name": "memo",
+                    "type": "string"
                 }
             ]
         },
@@ -186,6 +230,16 @@
                 {
                     "name": "oracle",
                     "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "regsymbol",
+            "base": "",
+            "fields": [
+                {
+                    "name": "quantity",
+                    "type": "asset"
                 }
             ]
         },
@@ -230,6 +284,26 @@
             ]
         },
         {
+            "name": "sym_item",
+            "base": "",
+            "fields": [
+                {
+                    "name": "symbol",
+                    "type": "symbol"
+                }
+            ]
+        },
+        {
+            "name": "unregchainid",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint8"
+                }
+            ]
+        },
+        {
             "name": "unregoracle",
             "base": "",
             "fields": [
@@ -238,27 +312,37 @@
                     "type": "name"
                 }
             ]
+        },
+        {
+            "name": "unregsymbol",
+            "base": "",
+            "fields": [
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "withdraw",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                }
+            ]
         }
     ],
     "actions": [
         {
+            "name": "claim",
+            "type": "claim",
+            "ricardian_contract": ""
+        },
+        {
             "name": "claimed",
             "type": "claimed",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "dsearchid",
-            "type": "dsearchid",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "dsearchname",
-            "type": "dsearchname",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "dsearchoracle",
-            "type": "dsearchoracle",
             "ricardian_contract": ""
         },
         {
@@ -267,8 +351,23 @@
             "ricardian_contract": ""
         },
         {
+            "name": "received",
+            "type": "received",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "regchainid",
+            "type": "regchainid",
+            "ricardian_contract": ""
+        },
+        {
             "name": "regoracle",
             "type": "regoracle",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "regsymbol",
+            "type": "regsymbol",
             "ricardian_contract": ""
         },
         {
@@ -282,15 +381,30 @@
             "ricardian_contract": ""
         },
         {
+            "name": "unregchainid",
+            "type": "unregchainid",
+            "ricardian_contract": ""
+        },
+        {
             "name": "unregoracle",
             "type": "unregoracle",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "unregsymbol",
+            "type": "unregsymbol",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "withdraw",
+            "type": "withdraw",
             "ricardian_contract": ""
         }
     ],
     "tables": [
         {
-            "name": "blu",
-            "type": "blu_item",
+            "name": "idchain",
+            "type": "chain_item",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
@@ -305,6 +419,27 @@
         {
             "name": "receipts",
             "type": "receipt_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "receivedata",
+            "type": "receive_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "symbols",
+            "type": "sym_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "transferdata",
+            "type": "blu_item",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
