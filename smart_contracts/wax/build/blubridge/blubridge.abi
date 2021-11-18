@@ -4,6 +4,24 @@
     "types": [],
     "structs": [
         {
+            "name": "balance_item",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from_account",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                },
+                {
+                    "name": "memo",
+                    "type": "string"
+                }
+            ]
+        },
+        {
             "name": "blu_item",
             "base": "",
             "fields": [
@@ -132,24 +150,6 @@
                 {
                     "name": "account",
                     "type": "name"
-                }
-            ]
-        },
-        {
-            "name": "receipt_item",
-            "base": "",
-            "fields": [
-                {
-                    "name": "from_account",
-                    "type": "name"
-                },
-                {
-                    "name": "quantity",
-                    "type": "asset"
-                },
-                {
-                    "name": "memo",
-                    "type": "string"
                 }
             ]
         },
@@ -403,6 +403,13 @@
     ],
     "tables": [
         {
+            "name": "balances",
+            "type": "balance_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
             "name": "idchain",
             "type": "chain_item",
             "index_type": "i64",
@@ -412,13 +419,6 @@
         {
             "name": "oracles",
             "type": "oracle_item",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
-            "name": "receipts",
-            "type": "receipt_item",
             "index_type": "i64",
             "key_names": [],
             "key_types": []

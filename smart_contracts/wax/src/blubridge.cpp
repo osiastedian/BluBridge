@@ -258,15 +258,12 @@ void blubridge::withdraw( eosio::name from ) {
     auto item = balances_.find( from.value );
 	check( item->quantity.amount > 0 , "Not enough balance to withdraw" );
 	// End of cross check logic
-	
-	eosio::transaction txn{};
-	txn.actions.emplace_back(
-        eosio::permission_level( get_self(), "active"_n),
-        tokencontract,
-        "transfer"_n,
-        std::make_tuple(get_self(), from, item->quantity, "Amount sucessfully transferred")
-	);
-	txn.send( from.value , get_self());
+
+	action(
+		permission_level{ get_self(), "active"_n },
+		tokencontract, "transfer"_n,
+		std::make_tuple( get_self(), from, item->quantity, string("Blubridge withdraw"))
+	).send();
 
 	//Deduct send tokens from receipt table
 	balances_.modify(*item, same_payer, [&](auto &t){

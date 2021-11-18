@@ -62,15 +62,15 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		 *		Holds the notified data to be stored
 		 *		Used in send, withdraw and claim functions
 		 */
-		struct [[eosio::table("receipts")]] receipt_item {
+		struct [[eosio::table("balances")]] balance_item {
 			eosio::name			    from_account;
 			eosio::asset			quantity;
 			std::string				memo;
 
 			uint64_t primary_key() const { return from_account.value; }
 		};
-		typedef eosio::multi_index<"receipts"_n, receipt_item> receipts_table;
-		receipts_table    balances_;
+		typedef eosio::multi_index<"balances"_n, balance_item> balance_table;
+		balance_table    balances_;
 
 		/* 
 		 * Description: 
@@ -240,7 +240,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 
 		/* 
 		 * Notification function listening to specified smart contract in annotation
-		 * Trigger only when a transferred action is sent in eosio.token smart contract
+		 * Trigger only when a transferred action is sent in bludactokens smart contract
 		 */
 		[[eosio::on_notify("bludactokens::transfer")]]
 		void on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo );
