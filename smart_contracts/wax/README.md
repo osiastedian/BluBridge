@@ -16,3 +16,5 @@
 send parameter change checksum256 to string
 
 
+cleos -u https://api.testnet.eos.io set account permission bvctvozrlgrg active --add-code -p bvctvozrlgrg@active
+

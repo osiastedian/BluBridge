@@ -4,7 +4,6 @@ if(EOSIO_CDT_ROOT STREQUAL "" OR NOT EOSIO_CDT_ROOT)
    find_package(eosio.cdt)
 endif()
 
-
 ExternalProject_Add(
    blubridge_project
    SOURCE_DIR ${CMAKE_SOURCE_DIR}/src
@@ -16,19 +15,6 @@ ExternalProject_Add(
    INSTALL_COMMAND ""
    BUILD_ALWAYS 1
 )
-
-# Not working boost unit_test_framework
-#ExternalProject_Add(
-#   blubridge_test_project
-#   SOURCE_DIR ${CMAKE_SOURCE_DIR}/test
-#   BINARY_DIR ${CMAKE_BINARY_DIR}/test
-#   CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=${EOSIO_CDT_ROOT}/lib/cmake/eosio.cdt/EosioWasmToolchain.cmake
-#   UPDATE_COMMAND ""
-#   PATCH_COMMAND ""
-#   TEST_COMMAND ""
-#   INSTALL_COMMAND ""
-#   BUILD_ALWAYS 1
-#)
 
 include (CTest)
 enable_testing()
