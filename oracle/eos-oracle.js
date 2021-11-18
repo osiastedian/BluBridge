@@ -93,7 +93,7 @@ const generateEthSignature = (transferData) => {
     },
     {
       propertyOne: id,
-      propertyTwo: web3.utils.toBN(web3.utils.toWei(`${amount}`, 'ether')),
+      propertyTwo: web3.utils.toBN(web3.utils.toWei(`${amount}`, 'ether')).toString(),
       propertyThree: chainId,
       propertyFour: tokenAddress,
       propertyFive: toAddress,

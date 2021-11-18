@@ -17,8 +17,10 @@ const LOG = console.log;
 const ERROR = console.error;
 const wsEndpoint = process.env.POLYGON_WS_ENDPOINT;
 const contractAddress = process.env.POLYGON_CONTRACT_ADDRESS;
-const claimedTopic = "0xce3bcb6e219596cf26007ffdfaae8953bc3f76e3f36c0a79b23e28020da3222e";
-const sentTopic = "0x0af9a96d5eab584bc97107a072072e71ae2353e7fa0ad649f0a7bb5b542e0877";
+const claimedTopic =
+  '0xce3bcb6e219596cf26007ffdfaae8953bc3f76e3f36c0a79b23e28020da3222e';
+const sentTopic =
+  '0x0af9a96d5eab584bc97107a072072e71ae2353e7fa0ad649f0a7bb5b542e0877';
 const eosOracle = process.env.ORACLE_EOS_ACCOUNT;
 const polygonOracle = process.env.ORACLE_POLYGON_ADDRESS;
 const eosContractAccount = process.env.EOS_CONTRACT_ACCOUNT;
@@ -94,7 +96,13 @@ const received = ({ id, toAccount, chainId, quantity }) => {
         permission: 'active',
       },
     ],
-    data: { id, toAccount, chainId, quantity },
+    data: {
+      id,
+      to_account: toAccount,
+      chain_id: chainId,
+      quantity,
+      oracle_name: eosOracle,
+    },
   };
   LOG('Receiving:  ', receivedAction);
   api
@@ -118,7 +126,7 @@ const received = ({ id, toAccount, chainId, quantity }) => {
 const amountToWaxQuantity = (tokenAmount, tokenAddress) => {
   const tokenInfo = symbolToEthAddressMap[tokenAddress];
   const amount = tokenAmount / `1e${tokenInfo.polygonDecimals}`;
-  return `${amount} ${tokenInfo.account}`;
+  return `${amount.toFixed(4)} ${tokenInfo.account}`;
 };
 
 ws.on('open', () => {
@@ -148,7 +156,10 @@ ws.on('message', (rawData) => {
     claimed({
       id: parseInt(id, 16),
       toAddress: toAddress.replace('0x', ''),
-      quantity: amountToWaxQuantity(parseInt(data, 16), tokenAddress),
+      quantity: amountToWaxQuantity(
+        parseInt(data, 16),
+        web3.eth.abi.decodeParameter('address', tokenAddress)
+      ),
     });
   } else if (topic === sentTopic) {
     const [id, tokenAddress, toAddress] = topicParams;
@@ -156,10 +167,14 @@ ws.on('message', (rawData) => {
       { ParentStruct: { propertyOne: 'uint8', propertyTwo: 'uint256' } },
       data
     );
-
+    const toAccountParsed = web3.utils
+      .hexToAscii(toAddress)
+      .split('')
+      .filter((a) => a !== '\x00')
+      .join('');
     received({
-      id,
-      toAccount: web3.utils.hexToAscii(toAddress).replace('\x00', ''),
+      id: web3.eth.abi.decodeParameter('uint64', id),
+      toAccount: toAccountParsed,
       chainId,
       quantity: amountToWaxQuantity(
         amount,
