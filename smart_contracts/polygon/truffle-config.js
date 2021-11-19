@@ -58,6 +58,14 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: true,
     },
+    maticMainnet: {
+      provider: () =>
+        new HDWalletProvider([privateKey], `https://polygon-rpc.com`),
+      network_id: 137,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
   },
 
   // Set default mocha options here, use special reporters etc.
@@ -102,6 +110,6 @@ module.exports = {
   // }
   plugins: ["truffle-plugin-verify"],
   api_keys: {
-    // polygonscan: X9RPVIQYARQSYINXGTHMFH3A27ZW4V18WG
-  }
+    polygonscan: "HCFR63XMB931DX55USVJG5ZUBGCPRPTSX5",
+  },
 };

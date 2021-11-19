@@ -14,7 +14,7 @@ contract:
   eos: bvctvozrlgrg
 
 eos:
-  image: "osiastedian/blubridge-oracle:1.0.5"
+  image: "osiastedian/blubridge-oracle:1.0.6"
 
 eosAccount: alice
 eosPrivateKey: 5KNZU2AeW.....
