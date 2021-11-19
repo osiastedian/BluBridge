@@ -1,5 +1,5 @@
-const TokenBridge = artifacts.require("TokenBridge");
+const BluDacTokenBridge = artifacts.require("BluDacTokenBridge");
 
 module.exports = function (deployer) {
-  deployer.deploy(TokenBridge, 1);
+  deployer.deploy(BluDacTokenBridge, 2);
 };

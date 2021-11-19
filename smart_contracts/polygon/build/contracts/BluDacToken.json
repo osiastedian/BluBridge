@@ -168,8 +168,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -182,8 +181,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -196,8 +194,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -221,8 +218,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -265,8 +261,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -310,8 +305,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -354,8 +348,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -379,8 +372,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -399,8 +391,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -442,8 +433,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -498,8 +488,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -519,8 +508,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -575,8 +563,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -589,8 +576,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -603,8 +589,7 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -13892,7 +13877,7 @@
         485
       ],
       "BluDacToken": [
-        3685
+        3711
       ],
       "Context": [
         1878
@@ -13937,12 +13922,12 @@
         2081
       ]
     },
-    "id": 3686,
+    "id": 3712,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3671,
+        "id": 3697,
         "literals": [
           "solidity",
           "^",
@@ -13955,9 +13940,9 @@
       {
         "absolutePath": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
         "file": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
-        "id": 3672,
+        "id": 3698,
         "nodeType": "ImportDirective",
-        "scope": 3686,
+        "scope": 3712,
         "sourceUnit": 1222,
         "src": "83:55:19",
         "symbolAliases": [],
@@ -13966,9 +13951,9 @@
       {
         "absolutePath": "@openzeppelin/contracts/access/AccessControl.sol",
         "file": "@openzeppelin/contracts/access/AccessControl.sol",
-        "id": 3673,
+        "id": 3699,
         "nodeType": "ImportDirective",
-        "scope": 3686,
+        "scope": 3712,
         "sourceUnit": 307,
         "src": "139:58:19",
         "symbolAliases": [],
@@ -13977,9 +13962,9 @@
       {
         "absolutePath": "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol",
         "file": "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol",
-        "id": 3674,
+        "id": 3700,
         "nodeType": "ImportDirective",
-        "scope": 3686,
+        "scope": 3712,
         "sourceUnit": 1560,
         "src": "199:81:19",
         "symbolAliases": [],
@@ -13990,13 +13975,13 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 3675,
+              "id": 3701,
               "name": "ERC20PresetMinterPauser",
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 1559,
               "src": "306:23:19"
             },
-            "id": 3676,
+            "id": 3702,
             "nodeType": "InheritanceSpecifier",
             "src": "306:23:19"
           }
@@ -14019,9 +14004,9 @@
         ],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 3685,
+        "id": 3711,
         "linearizedBaseContracts": [
-          3685,
+          3711,
           1559,
           1398,
           675,
@@ -14042,12 +14027,12 @@
         "nodes": [
           {
             "body": {
-              "id": 3683,
+              "id": 3709,
               "nodeType": "Block",
               "src": "396:2:19",
               "statements": []
             },
-            "id": 3684,
+            "id": 3710,
             "implemented": true,
             "kind": "constructor",
             "modifiers": [
@@ -14055,7 +14040,7 @@
                 "arguments": [
                   {
                     "hexValue": "426c75446163546f6b656e",
-                    "id": 3679,
+                    "id": 3705,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
@@ -14071,7 +14056,7 @@
                   },
                   {
                     "hexValue": "424c55",
-                    "id": 3680,
+                    "id": 3706,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
@@ -14086,9 +14071,9 @@
                     "value": "BLU"
                   }
                 ],
-                "id": 3681,
+                "id": 3707,
                 "modifierName": {
-                  "id": 3678,
+                  "id": 3704,
                   "name": "ERC20PresetMinterPauser",
                   "nodeType": "IdentifierPath",
                   "referencedDeclaration": 1559,
@@ -14101,25 +14086,25 @@
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3677,
+              "id": 3703,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "347:2:19"
             },
             "returnParameters": {
-              "id": 3682,
+              "id": 3708,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "396:0:19"
             },
-            "scope": 3685,
+            "scope": 3711,
             "src": "336:62:19",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "public"
           }
         ],
-        "scope": 3686,
+        "scope": 3712,
         "src": "282:118:19"
       }
     ],
@@ -14135,7 +14120,7 @@
         485
       ],
       "BluDacToken": [
-        3685
+        3711
       ],
       "Context": [
         1878
@@ -14180,12 +14165,12 @@
         2081
       ]
     },
-    "id": 3686,
+    "id": 3712,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3671,
+        "id": 3697,
         "literals": [
           "solidity",
           "^",
@@ -14198,9 +14183,9 @@
       {
         "absolutePath": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
         "file": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
-        "id": 3672,
+        "id": 3698,
         "nodeType": "ImportDirective",
-        "scope": 3686,
+        "scope": 3712,
         "sourceUnit": 1222,
         "src": "83:55:19",
         "symbolAliases": [],
@@ -14209,9 +14194,9 @@
       {
         "absolutePath": "@openzeppelin/contracts/access/AccessControl.sol",
         "file": "@openzeppelin/contracts/access/AccessControl.sol",
-        "id": 3673,
+        "id": 3699,
         "nodeType": "ImportDirective",
-        "scope": 3686,
+        "scope": 3712,
         "sourceUnit": 307,
         "src": "139:58:19",
         "symbolAliases": [],
@@ -14220,9 +14205,9 @@
       {
         "absolutePath": "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol",
         "file": "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol",
-        "id": 3674,
+        "id": 3700,
         "nodeType": "ImportDirective",
-        "scope": 3686,
+        "scope": 3712,
         "sourceUnit": 1560,
         "src": "199:81:19",
         "symbolAliases": [],
@@ -14233,13 +14218,13 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 3675,
+              "id": 3701,
               "name": "ERC20PresetMinterPauser",
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 1559,
               "src": "306:23:19"
             },
-            "id": 3676,
+            "id": 3702,
             "nodeType": "InheritanceSpecifier",
             "src": "306:23:19"
           }
@@ -14262,9 +14247,9 @@
         ],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 3685,
+        "id": 3711,
         "linearizedBaseContracts": [
-          3685,
+          3711,
           1559,
           1398,
           675,
@@ -14285,12 +14270,12 @@
         "nodes": [
           {
             "body": {
-              "id": 3683,
+              "id": 3709,
               "nodeType": "Block",
               "src": "396:2:19",
               "statements": []
             },
-            "id": 3684,
+            "id": 3710,
             "implemented": true,
             "kind": "constructor",
             "modifiers": [
@@ -14298,7 +14283,7 @@
                 "arguments": [
                   {
                     "hexValue": "426c75446163546f6b656e",
-                    "id": 3679,
+                    "id": 3705,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
@@ -14314,7 +14299,7 @@
                   },
                   {
                     "hexValue": "424c55",
-                    "id": 3680,
+                    "id": 3706,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
@@ -14329,9 +14314,9 @@
                     "value": "BLU"
                   }
                 ],
-                "id": 3681,
+                "id": 3707,
                 "modifierName": {
-                  "id": 3678,
+                  "id": 3704,
                   "name": "ERC20PresetMinterPauser",
                   "nodeType": "IdentifierPath",
                   "referencedDeclaration": 1559,
@@ -14344,25 +14329,25 @@
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3677,
+              "id": 3703,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "347:2:19"
             },
             "returnParameters": {
-              "id": 3682,
+              "id": 3708,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "396:0:19"
             },
-            "scope": 3685,
+            "scope": 3711,
             "src": "336:62:19",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "public"
           }
         ],
-        "scope": 3686,
+        "scope": 3712,
         "src": "282:118:19"
       }
     ],
@@ -14372,17 +14357,9 @@
     "name": "solc",
     "version": "0.8.0+commit.c7dfd78e.Emscripten.clang"
   },
-  "networks": {
-    "80001": {
-      "events": {},
-      "links": {},
-      "address": "0xC421EBFb54EBFAdeF705B4b79a818A61aC3fEbb0",
-      "transactionHash": "0xaa3e1f11157f9ba5a4b92e9d4b1fa11e4b93779cda4d0b91770984b7662a24d0"
-    }
-  },
+  "networks": {},
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-11-15T13:27:57.616Z",
-  "networkType": "ethereum",
+  "updatedAt": "2021-11-18T14:23:23.135Z",
   "devdoc": {
     "kind": "dev",
     "methods": {

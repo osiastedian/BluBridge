@@ -29,7 +29,7 @@ struct SendTransferData {
     bool claimed;
 }
 
-contract TokenBridge is AccessControl {
+contract BluDacTokenBridge is AccessControl {
     using ECDSA for bytes32;
     using Address for address;
     using EnumerableSet for EnumerableSet.Bytes32Set;
