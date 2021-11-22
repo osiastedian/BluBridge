@@ -1,8 +1,12 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: {{ .Release.Name }}-oracle-eos
 spec:
+  selector:
+    matchLabels:
+      app: oracle-eos
+  replicas: {{ default 1 .Values.replicaCount | int }}
   template:
     metadata:
         labels:
@@ -36,5 +40,3 @@ spec:
               value: {{ .Values.polygonAddress  }}
             - name: ORACLE_POLYGON_PRIVATE_KEY
               value: {{ .Values.polygonPrivateKey  }}
-      restartPolicy: OnFailure
-  backoffLimit: 4
