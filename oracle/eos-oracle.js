@@ -93,7 +93,9 @@ const generateEthSignature = (transferData) => {
     },
     {
       propertyOne: id,
-      propertyTwo: web3.utils.toBN(web3.utils.toWei(`${amount}`, 'ether')).toString(),
+      propertyTwo: web3.utils
+        .toBN(web3.utils.toWei(`${amount}`, 'ether'))
+        .toString(),
       propertyThree: chainId,
       propertyFour: tokenAddress,
       propertyFive: toAddress,
@@ -139,61 +141,59 @@ const saveCursor = (cursor) => {
   fs.writeFileSync(cursorPath, cursor);
 };
 
-const run = async () => {
-  const client = createDfuseClient(dfuseClientOptions);
+const client = createDfuseClient(dfuseClientOptions);
 
-  LOG(`Starting EOS Oracle: ${oracleAccount}`);
-  let cursor = `${fs.existsSync(cursorPath) && fs.readFileSync(cursorPath)}`;
-  await client.graphql(
-    streamTransfer,
-    (message, stream) => {
-      if (message.type === 'error') {
-        ERROR('An error occurred', message.errors, message.terminal);
-      }
+LOG(`Starting EOS Oracle: ${oracleAccount}`);
+let cursor = `${fs.existsSync(cursorPath) && fs.readFileSync(cursorPath)}`;
 
-      if (message.type === 'data') {
-        const rawData = message.data.searchTransactionsForward;
-        const actions = rawData.trace.matchingActions;
-        cursor = rawData.cursor;
-
-        actions.forEach((action) => {
-          const { quantity, to_address: toAddress } = action.json;
-          const { id } = action.json;
-          const chainId = action.json.chain_id;
-          const [amount, symbol] = quantity.split(' ');
-
-          const token = symbolToEthAddressMap[symbol];
-
-          const parsedData = {
-            id,
-            chainId,
-            toAddress: toAddress.replace('000000000000000000000000', '0x'),
-            amount,
-            tokenAddress: token.address,
-          };
-          LOG('Received Sent:', parsedData);
-          const signature = generateEthSignature(parsedData);
-          registerSignature(id, signature)
-            .then((result) => LOG('Successful sign: \n', result))
-            .then(() => saveCursor(cursor));
-        });
-
-        stream.mark({ cursor: rawData.cursor });
-      }
-
-      if (message.type === 'complete') {
-        LOG('Stream completed');
-      }
-    },
-    {
-      variables: {
-        query: `receiver:${bridgeContract} action:${logsendAction}`,
-        cursor,
-        limit: 10,
-        irreversibleOnly: true,
-      },
+client.graphql(
+  streamTransfer,
+  (message, stream) => {
+    if (message.type === 'error') {
+      ERROR('An error occurred', message.errors, message.terminal);
     }
-  );
-};
 
-run().catch(ERROR);
+    if (message.type === 'data') {
+      const rawData = message.data.searchTransactionsForward;
+      const actions = rawData.trace.matchingActions;
+      cursor = rawData.cursor;
+
+      actions.forEach((action) => {
+        const { quantity, to_address: toAddress } = action.json;
+        const { id } = action.json;
+        const chainId = action.json.chain_id;
+        const [amount, symbol] = quantity.split(' ');
+
+        const token = symbolToEthAddressMap[symbol];
+
+        const parsedData = {
+          id,
+          chainId,
+          toAddress: toAddress.replace('000000000000000000000000', '0x'),
+          amount,
+          tokenAddress: token.address,
+        };
+        LOG('Received Sent:', parsedData);
+        const signature = generateEthSignature(parsedData);
+        registerSignature(id, signature)
+          .then((result) => LOG('Successful sign: \n', result))
+          .then(() => saveCursor(cursor));
+      });
+
+      stream.mark({ cursor: rawData.cursor });
+    }
+
+    if (message.type === 'complete') {
+      LOG('Stream completed');
+      // process.kill(process.pid);
+    }
+  },
+  {
+    variables: {
+      query: `receiver:${bridgeContract} action:${logsendAction}`,
+      cursor,
+      limit: 10,
+      irreversibleOnly: true,
+    },
+  }
+);
