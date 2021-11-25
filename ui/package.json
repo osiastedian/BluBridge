@@ -9,8 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@dfuse/client": "0.3.21",
     "@waxio/waxjs": "^1.0.4",
     "bootstrap": "5.1.3",
+    "fs": "^0.0.1-security",
     "next": "12.0.1",
     "react": "17.0.2",
     "react-bootstrap": "^2.0.2",

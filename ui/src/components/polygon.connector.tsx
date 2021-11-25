@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Image } from 'react-bootstrap';
 
+import { WalletContext } from '../context/wallet.context';
 import useMetaMask from '../services/metamask.service';
 import { truncateAddress } from '../services/utils.service';
-import { PolygonMainnet } from '../shared/constants';
+import { Connector, PolygonMainnet } from '../shared/constants';
 import { MetamaskError } from '../shared/enums/metamask-error.enum';
 import ConnectToNetworkModal from './connect-to-network.modal';
 import MissingMetamaskModal from './missing-metamask.modal';
 
 export default function PolygonConnector() {
   const metamask = useMetaMask();
+  const { fromConnector, toConnector, setFrom, setTo } =
+    useContext(WalletContext);
 
   const [showMMError, setShowMMError] = useState(false);
   const closeMMError = () => setShowMMError(false);
@@ -22,9 +25,15 @@ export default function PolygonConnector() {
       PolygonMainnet.chainId,
       (address: string) => {
         console.log(`Connected to Metamask ${address}`);
+
+        if (fromConnector.id === Connector.POLYGON) {
+          setFrom({ ...fromConnector, connected: true });
+        } else if (toConnector.id === Connector.POLYGON) {
+          setTo({ ...toConnector, connected: true });
+        }
       },
       (error: MetamaskError) => {
-        console.log(error);
+        console.error(error);
         if (error === MetamaskError.INVALID_NETWORK) {
           setNetworkError(true);
         } else if (error === MetamaskError.NOT_INSTALLED) {

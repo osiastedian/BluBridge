@@ -6,6 +6,7 @@ declare global {
   }
 }
 
+
 function MyApp({ Component, pageProps }) {
   return (
     <>
