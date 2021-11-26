@@ -1,8 +1,19 @@
+import { useState } from 'react';
 import { Image } from 'react-bootstrap';
 import { useWax } from '../context/wax.context';
 
 export default function WaxConnector() {
   const { accountName, login, isConnected } = useWax();
+  const [error, setError] = useState<string>(undefined);
+
+  const onLogin = async () => {
+    try {
+      setError(null);
+      await login();
+    } catch (e) {
+      setError(e.message);
+    }
+  };
 
   return (
     <>
@@ -12,11 +23,12 @@ export default function WaxConnector() {
       </div>
       <div className="w-100">
         <button
-          onClick={login}
+          onClick={onLogin}
           className="w-100 bg-primary btn text-white rounded shadow mt-3 bg-primary"
         >
           {isConnected ? `Connected as ${accountName}` : 'Connect'}
         </button>
+        {error && <span className="text-danger">{error}</span>}
       </div>
     </>
   );

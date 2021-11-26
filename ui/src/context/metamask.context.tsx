@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import Web3 from 'web3';
 import { MetaMaskNetworkConfig } from '../shared/interfaces/metamask-network-config';
+import { Contract } from 'web3-eth-contract';
+import { AbiItem } from 'web3-utils';
 
 interface MetamaskContextProps {
   windowLoaded: boolean;
@@ -15,6 +17,7 @@ interface MetamaskContextProps {
     tokenAbi: any,
     tokenContract: string
   ) => Promise<string>;
+  getContract: (abi: AbiItem, address: string) => Contract;
 }
 
 const MetamaskContext = createContext<Partial<MetamaskContextProps>>({});
@@ -69,6 +72,10 @@ const MetamaskContextProvider: React.FC = ({ children }) => {
     return balance;
   };
 
+  const getContract = (abi: AbiItem, address: string): Contract => {
+    return new web3.eth.Contract(abi, address);
+  };
+
   useEffect(() => {
     window.onload = () => {
       setWindowLoaded(true);
@@ -88,6 +95,7 @@ const MetamaskContextProvider: React.FC = ({ children }) => {
         getCurrentAddress,
         isCurrentNetwork,
         balanceOf,
+        getContract,
       }}
     >
       {children}

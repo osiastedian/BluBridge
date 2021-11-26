@@ -7,10 +7,11 @@ import {
 } from 'react';
 import { addPrecision } from '../services/utils.service';
 
-import bludacToken from '../shared/abis/BluDacToken.json';
+import bludacTokenAbi from '../shared/abis/BluDacToken.json';
 import bridgeAbi from '../shared/abis/PolygonBridge.json';
 
 import { PolygonMainnet } from '../shared/constants';
+import { PolygonTransaction } from '../shared/interfaces/polygon-transaction';
 import { useMetamask } from './metamask.context';
 
 const bluTokenContract = process.env.BLU_TOKEN_CONTRACT;
@@ -29,6 +30,18 @@ interface PolygonContextProps {
     chainId: number,
     signatures: string[]
   ) => Promise<string>;
+  approve: (
+    from: string,
+    amount: number,
+    precision?: number
+  ) => Promise<string>;
+  bridgeSend: (
+    from: string,
+    toAddress: string,
+    toChainId: string,
+    amount: number,
+    precision?: number
+  ) => Promise<number>;
 }
 
 const PolygonContext = createContext<Partial<PolygonContextProps>>({});
@@ -55,7 +68,7 @@ const PolygonContextProvider: React.FC = ({ children }) => {
   const fetchBalance = async () => {
     const balance = await metaMask.balanceOf(
       address,
-      bludacToken.abi,
+      bludacTokenAbi.abi,
       bluTokenContract
     );
     return parseInt(balance, 10);
@@ -131,6 +144,51 @@ const PolygonContextProvider: React.FC = ({ children }) => {
     return claimTx.transactionHash;
   };
 
+  const approve = async (
+    from: string,
+    amount: number,
+    precision = 4
+  ): Promise<string> => {
+    const tokenContract = metaMask.getContract(
+      bludacTokenAbi.abi as any,
+      bluTokenContract
+    );
+    const approveTx = await tokenContract.methods
+      .approve(
+        bluBridgeContract,
+        metaMask.web3.utils.toBN(
+          metaMask.web3.utils.toWei(addPrecision(amount, precision), 'ether')
+        )
+      )
+      .send({ from });
+    return approveTx.transactionHash;
+  };
+
+  const bridgeSend = async (
+    from: string,
+    toAddress: string,
+    toChainId: string,
+    amount: number,
+    precision: number = 4
+  ): Promise<number> => {
+    const { web3 } = metaMask;
+    const bridgeContract = metaMask.getContract(
+      bridgeAbi as any,
+      bluBridgeContract
+    );
+    const sendTx: PolygonTransaction = await bridgeContract.methods
+      .send(
+        bluTokenContract,
+        web3.utils.toBN(
+          web3.utils.toWei(addPrecision(amount, precision), 'ether')
+        ),
+        Number(toChainId),
+        web3.utils.asciiToHex(toAddress)
+      )
+      .send({ from });
+    return sendTx.blockNumber;
+  };
+
   useEffect(() => {
     if (!isConnectedToPolygon) {
       metaMask.switchNetwork(PolygonMainnet);
@@ -148,6 +206,8 @@ const PolygonContextProvider: React.FC = ({ children }) => {
         addNetwork,
         fetchBalance,
         claim,
+        approve,
+        bridgeSend,
       }}
     >
       {children}

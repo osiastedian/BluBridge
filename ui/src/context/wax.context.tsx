@@ -1,3 +1,4 @@
+import { TransactResult } from 'eosjs/dist/eosjs-api-interfaces';
 import { createContext, useContext, useEffect, useState } from 'react';
 import * as waxjs from '@waxio/waxjs/dist';
 import {
@@ -12,13 +13,17 @@ import {
   TransferDataRow,
   WaxTransferData,
 } from '../shared/interfaces/wax-transfer-data';
+import {
+  ReceiveDataRow,
+  WaxReceiveData,
+} from '../shared/interfaces/wax-receive-data';
 const wax = new waxjs.WaxJS({ rpcEndpoint: 'https://wax.greymass.com' });
 
 interface WaxContextProps {
   accountName: string;
   pubKeys: string[];
   isConnected: boolean;
-  login: () => void;
+  login: () => Promise<string>;
   fetchBalance: (
     tokenSymbol: EosTokenSymbol,
     tokenContract: EosTokenContract
@@ -41,6 +46,16 @@ interface WaxContextProps {
   ) => Promise<void>;
   listenToLogSend: (fromAccount: string) => Promise<string>;
   getSignatures: (id: number) => Promise<string[]>;
+  getReceiveData: (id: number) => Promise<ReceiveDataRow>;
+  claim: (
+    fromAccount: string,
+    bridgeContract: EosBridgeContract,
+    txId: number
+  ) => Promise<TransactResult>;
+  withdraw: (
+    fromAccount: string,
+    bridgeContract: EosBridgeContract
+  ) => Promise<TransactResult>;
 }
 
 const WaxContext = createContext<Partial<WaxContextProps>>({});
@@ -52,8 +67,10 @@ const WaxContextProvider: React.FC = ({ children }) => {
   const [pubKeys, setPubkeys] = useState(wax.pubKeys);
   const { listenToStreamTransfer } = useDfuse();
 
-  const login = () => {
-    wax.login().then(setAccountName);
+  const login = async () => {
+    const accountName = await wax.login();
+    setAccountName(accountName);
+    return accountName;
   };
 
   const fetchBalance = async (
@@ -152,7 +169,7 @@ const WaxContextProvider: React.FC = ({ children }) => {
 
     try {
       const result = await transaction;
-      console.log({ result });
+      console.log('Wax Send', { result });
       return;
     } catch (e) {
       console.error(e);
@@ -233,6 +250,102 @@ const WaxContextProvider: React.FC = ({ children }) => {
     return transferDataRow.signatures;
   };
 
+  const getReceiveData = async (id: number): Promise<ReceiveDataRow> => {
+    const receiveData: WaxReceiveData = await wax.rpc.get_table_rows({
+      json: true,
+      code: 'blubridgerv1',
+      scope: 'blubridgerv1',
+      table: 'receivedata',
+      lower_bound: id,
+      limit: 1,
+      reverse: false,
+      show_payer: false,
+    });
+
+    if (receiveData && receiveData.rows && receiveData.rows.length > 0) {
+      return receiveData.rows[0];
+    }
+
+    throw `Received data is invalid. (ID: ${id})`;
+  };
+
+  const claim = async (
+    fromAccount: string,
+    bridgeContract: EosBridgeContract,
+    txId: number
+  ): Promise<TransactResult> => {
+    const transaction = wax.api.transact(
+      {
+        actions: [
+          {
+            account: bridgeContract,
+            name: 'claim',
+            authorization: [
+              {
+                actor: fromAccount,
+                permission: 'active',
+              },
+            ],
+            data: {
+              from: fromAccount,
+              id: txId,
+            },
+          },
+        ],
+      },
+      {
+        blocksBehind: 3,
+        expireSeconds: 1000,
+      }
+    );
+
+    try {
+      const result = await transaction;
+      console.log('Wax CLAIM', { result });
+      return result as TransactResult;
+    } catch (e) {
+      console.error(e);
+      throw 'Failed to claim transaction from the bridge. Please try again or contact admin.';
+    }
+  };
+
+  const withdraw = async (
+    fromAccount: string,
+    bridgeContract: EosBridgeContract
+  ): Promise<TransactResult> => {
+    const transaction = wax.api.transact(
+      {
+        actions: [
+          {
+            account: bridgeContract,
+            name: 'withdraw',
+            authorization: [
+              {
+                actor: fromAccount,
+                permission: 'active',
+              },
+            ],
+            data: {
+              from: fromAccount,
+            },
+          },
+        ],
+      },
+      {
+        blocksBehind: 3,
+        expireSeconds: 1000,
+      }
+    );
+
+    try {
+      const result: TransactResult = (await transaction) as TransactResult;
+      return result;
+    } catch (e) {
+      console.error(e);
+      throw 'Transaction to withdraw tokens from Wax failed.';
+    }
+  };
+
   useEffect(() => {
     wax.isAutoLoginAvailable().then((isAutoLoginAvailable) => {
       if (isAutoLoginAvailable) {
@@ -253,6 +366,9 @@ const WaxContextProvider: React.FC = ({ children }) => {
         send,
         listenToLogSend,
         getSignatures,
+        getReceiveData,
+        claim,
+        withdraw,
       }}
     >
       {children}
