@@ -151,6 +151,7 @@ client.graphql(
   (message, stream) => {
     if (message.type === 'error') {
       ERROR('An error occurred', message.errors, message.terminal);
+      process.kill(process.pid);
     }
 
     if (message.type === 'data') {
