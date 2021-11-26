@@ -58,7 +58,7 @@ const Transfer = () => {
 
   const [previousFrom, setPreviousFrom] = useState<string>(null);
   const [balance, setBalance] = useState<BalanceState>({
-    amount: 0,
+    amount: undefined,
     isFetching: true,
   });
 
@@ -94,16 +94,22 @@ const Transfer = () => {
           <span className="font-size-12px font-weight-bold text-primary">
             TOKEN AMOUNT
           </span>
-          <FormControl
-            className="my-2"
-            type="number"
-            value={amount}
-            onChange={(e) => updateAmount(parseInt(e.target.value, 10))}
-            placeholder="Input amount"
-          />
+          <div className="position-relative">
+            <button 
+            onClick={(e) => updateAmount(balance.amount)}
+            className="btn bg-transparent text-primary font-weight-bold p-0 m-2 position-absolute right-0">MAX</button>
+            <FormControl
+              className="my-2"
+              type="number"
+              value={amount}
+              onChange={(e) => updateAmount((e.target.value) !== '' ? parseInt(e.target.value) : undefined)}
+              placeholder="Input amount"
+            />
+          </div>
+
           <button
             onClick={transfer}
-            disabled={isProcessing}
+            disabled={isProcessing || amount === undefined || amount <= 0 || amount > balance.amount}
             className="w-100 bg-primary btn text-white rounded shadow bg-primary"
           >
             {isProcessing ? 'Transferring...' : 'Transfer'}

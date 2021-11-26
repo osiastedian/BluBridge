@@ -31,7 +31,7 @@ export default function PolygonConnector() {
       </div>
       <div className="w-100">
         <button
-          onClick={connect}
+          onClick={() => {if (isInstalled) { connect(); } else { setShowMetamaskMissing(true) } }}
           disabled={!isConnectedToPolygon}
           className="w-100 bg-primary btn text-white rounded shadow mt-3 bg-primary"
         >
@@ -43,7 +43,7 @@ export default function PolygonConnector() {
           onHide={() => setShowMetamaskMissing(false)}
         ></MissingMetamaskModal>
       )}
-      {!showMetamaskMissing && !showNotConnectedToPolygon && (
+      {!showMetamaskMissing && showNotConnectedToPolygon && (
         <ConnectToNetworkModal
           onHide={() => setShowNotConnectedToPolygon(false)}
           targetNetwork={PolygonMainnet.chainName}

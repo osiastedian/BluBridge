@@ -55,9 +55,9 @@ const MetamaskContextProvider: React.FC = ({ children }) => {
     return walletAddress;
   };
 
-  const isCurrentNetwork = (config: MetaMaskNetworkConfig): boolean =>
+  const isCurrentNetwork = (config: MetaMaskNetworkConfig): boolean => 
     typeof window !== 'undefined' &&
-    Number(window.ethereum.networkVersion) !== parseInt(config.chainId, 16);
+    window.ethereum && Number(window.ethereum.networkVersion) === parseInt(config.chainId, 16);
 
   const balanceOf = async (
     address: string,
