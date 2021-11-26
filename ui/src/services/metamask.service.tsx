@@ -1,20 +1,46 @@
 import { useState } from 'react';
 import Web3 from 'web3';
 
-import * as bludacToken from '../shared/abis/BluDacToken.json';
-import * as polygonBridge from '../shared/abis/PolygonBridge.json';
+import bludacToken from '../shared/abis/BluDacToken.json';
+import polygonBridge from '../shared/abis/PolygonBridge.json';
 import { MetamaskError } from '../shared/enums/metamask-error.enum';
 import { MetamaskChain } from '../shared/interfaces/metamask-chain';
+import { MetaMaskNetworkConfig } from '../shared/interfaces/metamask-network-config';
 import { PolygonTransaction } from '../shared/interfaces/polygon-transaction';
 import { addPrecision } from './utils.service';
 
 const useMetaMask = () => {
-  const blubridgerContract = process.env.BLU_BRIDGER_CONTRACT;
+  const bluBridgeContract = process.env.BLU_BRIDGER_CONTRACT;
   const bluTokenContract = process.env.BLU_TOKEN_CONTRACT;
   const [web3, setWeb3] = useState(null);
   const [address, setAddress] = useState();
   const bludacTokenAbi = bludacToken.abi;
   const polygonBridgeAbi = polygonBridge.abi;
+
+  const addNetwork = (networkConfig: MetaMaskNetworkConfig) => {
+    return window.ethereum.request({
+      method: 'wallet_addEthereumChain',
+      params: [networkConfig],
+    });
+  };
+
+  const switchEthChain = (networkConfig: MetaMaskNetworkConfig) => {
+    return window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: networkConfig.chainId }],
+    });
+  };
+
+  const isInstalled = typeof window !== 'undefined' && window.ethereum;
+
+  const isCurrentNetwork = (config: MetaMaskNetworkConfig): boolean =>
+    Number(window.ethereum.networkVersion) !== parseInt(config.chainId, 16);
+
+  const requestAccount = (): Promise<string> => {
+    return window.ethereum
+      .request({ method: 'eth_requestAccounts' })
+      .then((accounts) => accounts[0]);
+  };
 
   const connectWallet = (
     chainId: string,
@@ -108,7 +134,7 @@ const useMetaMask = () => {
     const web3 = new Web3(window.ethereum);
     const contract = new web3.eth.Contract(
       polygonBridgeAbi as any,
-      blubridgerContract
+      bluBridgeContract
     );
 
     const tokenContract = new web3.eth.Contract(
@@ -119,7 +145,7 @@ const useMetaMask = () => {
     updateTxLog(null, 'Waiting to approve spend amount for transaction.');
     const approveTx = await tokenContract.methods
       .approve(
-        blubridgerContract,
+        bluBridgeContract,
         web3.utils.toBN(
           web3.utils.toWei(addPrecision(amount, precision), 'ether')
         )
@@ -168,7 +194,7 @@ const useMetaMask = () => {
     const web3 = new Web3(window.ethereum);
     const contract = new web3.eth.Contract(
       polygonBridgeAbi as any,
-      blubridgerContract
+      bluBridgeContract
     );
 
     const encodedParams = encodeParameters(
@@ -238,6 +264,11 @@ const useMetaMask = () => {
     claim,
     encodeParameters,
     getCurrentAddress,
+    switchEthChain,
+    isCurrentNetwork,
+    requestAccount,
+    isInstalled,
+    addNetwork,
   };
 };
 

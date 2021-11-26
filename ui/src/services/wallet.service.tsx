@@ -1,5 +1,9 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { Connector, PolygonToWaxBluChainId, WaxToPolygonBluChainId } from '../shared/constants';
+import {
+  Connector,
+  PolygonToWaxBluChainId,
+  WaxToPolygonBluChainId,
+} from '../shared/constants';
 import { PolygonTransaction } from '../shared/interfaces/polygon-transaction';
 import { ReceiveDataRow } from '../shared/interfaces/wax-receive-data';
 import { TransferDataRow } from '../shared/interfaces/wax-transfer-data';
@@ -46,18 +50,22 @@ export default class WalletService {
           amount
         );
 
-        throw 'Error123';
+        // throw 'Error123';
 
         updateTxLog(
           `Successfully transferred ${amount} BLU to bridge.`,
           'Waiting for approval to transfer to Polygon'
         );
-        const sendToEth = waxService.sendToEth(
+        const sendToEth = await waxService.sendToEth(
           'BLU',
           'blubridgerv1',
           WaxToPolygonBluChainId,
           hexToPrependedZeros(toAddress),
           amount
+        );
+
+        updateTxLog(
+          'Successfully submitted transaction (Transfer BLU to Polygon)'
         );
 
         return null;
@@ -99,11 +107,7 @@ export default class WalletService {
       const fromAddress = await this.getAddress(fromConnector);
       const listenToLogSend: Promise<number> = new Promise(
         (resolve, reject) => {
-          updateTxLog(
-            `Successfully submitted transaction (Transfer BLU to Polygon)`,
-            'Confirming Bridge to Polygon transaction.'
-          );
-
+          updateTxLog('Confirming Bridge to Polygon transaction.');
           this.dfuse.listenToLogsendTx(fromAddress, (id: number) => {
             resolve(id);
           });

@@ -1,6 +1,4 @@
-import {
-    ActionTraceData, createDfuseClient, DfuseClient, InboundMessage, InboundMessageType, waitFor
-} from '@dfuse/client';
+import { createDfuseClient, DfuseClient } from '@dfuse/client';
 
 export class DfuseService {
   client: DfuseClient;
