@@ -185,7 +185,7 @@ client.graphql(
 
     if (message.type === 'complete') {
       LOG('Stream completed');
-      // process.kill(process.pid);
+      process.kill(process.pid);
     }
   },
   {
