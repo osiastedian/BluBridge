@@ -190,10 +190,12 @@ const PolygonContextProvider: React.FC = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!isConnectedToPolygon) {
-      metaMask.switchNetwork(PolygonMainnet);
-    } else {
-      connect();
+    if (metaMask.isInstalled) {
+      if (!isConnectedToPolygon()) {
+        metaMask.switchNetwork(PolygonMainnet);
+      } else {
+        connect();
+      }
     }
   }, [metaMask, connect, isConnectedToPolygon]);
 
