@@ -136,7 +136,7 @@ const TransferContextProvider: React.FC = ({ children }) => {
         `Successfully verified receive transaction validity ID: ${receivedData.id}`
       );
       addLoadingLog(`Waiting for approval from Wax Wallet to receive tokens.`);
-      wax.claim(wax.accountName, 'blubridgerv1', claimId);
+      await wax.claim(wax.accountName, 'blubridgerv1', claimId);
       addSuccessLog(`Successfully submitted transaction to claim tokens.`);
       addLoadingLog(
         'Waiting for approval to withdraw your tokens from the bridge.'

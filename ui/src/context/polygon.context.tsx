@@ -173,7 +173,7 @@ const PolygonContextProvider: React.FC = ({ children }) => {
   ): Promise<number> => {
     const { web3 } = metaMask;
     const bridgeContract = metaMask.getContract(
-      bridgeAbi as any,
+      bridgeAbi.abi as any,
       bluBridgeContract
     );
     const sendTx: PolygonTransaction = await bridgeContract.methods
