@@ -1,11 +1,7 @@
 import { TransactResult } from 'eosjs/dist/eosjs-api-interfaces';
 import { createContext, useContext, useEffect, useState } from 'react';
 import * as waxjs from '@waxio/waxjs/dist';
-import {
-  EosBridgeContract,
-  EosTokenContract,
-  EosTokenSymbol,
-} from '../types/eos-types';
+
 import { addPrecision, retryOperation } from '../services/utils.service';
 import { useDfuse } from './dfuse.context';
 import { OnGraphqlStreamMessage } from '@dfuse/client';
@@ -25,20 +21,20 @@ interface WaxContextProps {
   isConnected: boolean;
   login: () => Promise<string>;
   fetchBalance: (
-    tokenSymbol: EosTokenSymbol,
-    tokenContract: EosTokenContract
+    tokenSymbol: string,
+    tokenContract: string
   ) => Promise<number>;
   transfer: (
-    tokenSymbol: EosTokenSymbol,
-    tokenContract: EosTokenContract,
-    toAddress: EosBridgeContract | string,
+    tokenSymbol: string,
+    tokenContract: string,
+    toAddress: string,
     amount: number,
     precision?: number
   ) => Promise<void>;
   send: (
     account: string,
-    tokenSymbol: EosTokenSymbol,
-    bridgeContract: EosBridgeContract,
+    tokenSymbol: string,
+    bridgeContract: string,
     chainId: number,
     ethAddress: string,
     amount: number,
@@ -49,15 +45,16 @@ interface WaxContextProps {
   getReceiveData: (id: number) => Promise<ReceiveDataRow>;
   claim: (
     fromAccount: string,
-    bridgeContract: EosBridgeContract,
+    bridgeContract: string,
     txId: number
   ) => Promise<TransactResult>;
   withdraw: (
     fromAccount: string,
-    bridgeContract: EosBridgeContract
+    bridgeContract: string
   ) => Promise<TransactResult>;
 }
 
+const waxBluBridgerContract = process.env.EOS_BLU_BRIDGER_CONTRACT;
 const WaxContext = createContext<Partial<WaxContextProps>>({});
 
 export const useWax = () => useContext(WaxContext);
@@ -74,8 +71,8 @@ const WaxContextProvider: React.FC = ({ children }) => {
   };
 
   const fetchBalance = async (
-    tokenSymbol: EosTokenSymbol,
-    tokenContract: EosTokenContract
+    tokenSymbol: string,
+    tokenContract: string
   ): Promise<number> => {
     const value = await wax.api.rpc.get_currency_balance(
       tokenContract,
@@ -92,9 +89,9 @@ const WaxContextProvider: React.FC = ({ children }) => {
   };
 
   const transfer = async (
-    tokenSymbol: EosTokenSymbol,
-    tokenContract: EosTokenContract,
-    toAddress: EosBridgeContract | string,
+    tokenSymbol: string,
+    tokenContract: string,
+    toAddress: string,
     amount: number,
     precision = 4
   ) => {
@@ -133,8 +130,8 @@ const WaxContextProvider: React.FC = ({ children }) => {
 
   const send = async (
     account: string,
-    tokenSymbol: EosTokenSymbol,
-    bridgeContract: EosBridgeContract,
+    tokenSymbol: string,
+    bridgeContract: string,
     chainId: number,
     ethAddress: string,
     amount: number,
@@ -204,7 +201,7 @@ const WaxContextProvider: React.FC = ({ children }) => {
           console.log('Stream completed');
         }
       };
-      listenToStreamTransfer('blubridgerv1', 'logsend', onMessage);
+      listenToStreamTransfer(waxBluBridgerContract, 'logsend', onMessage);
 
       setTimeout(() => {
         reject(new Error('Failed to fetch sending'));
@@ -214,8 +211,8 @@ const WaxContextProvider: React.FC = ({ children }) => {
   const getTransferDataInfo = async (id: number): Promise<TransferDataRow> => {
     const transferData: WaxTransferData = await wax.rpc.get_table_rows({
       json: true,
-      code: 'blubridgerv1',
-      scope: 'blubridgerv1',
+      code: waxBluBridgerContract,
+      scope: waxBluBridgerContract,
       table: 'transferdata',
       lower_bound: id,
       limit: 1,
@@ -253,8 +250,8 @@ const WaxContextProvider: React.FC = ({ children }) => {
   const getReceiveData = async (id: number): Promise<ReceiveDataRow> => {
     const receiveData: WaxReceiveData = await wax.rpc.get_table_rows({
       json: true,
-      code: 'blubridgerv1',
-      scope: 'blubridgerv1',
+      code: waxBluBridgerContract,
+      scope: waxBluBridgerContract,
       table: 'receivedata',
       lower_bound: id,
       limit: 1,
@@ -271,7 +268,7 @@ const WaxContextProvider: React.FC = ({ children }) => {
 
   const claim = async (
     fromAccount: string,
-    bridgeContract: EosBridgeContract,
+    bridgeContract: string,
     txId: number
   ): Promise<TransactResult> => {
     const transaction = wax.api.transact(
@@ -311,7 +308,7 @@ const WaxContextProvider: React.FC = ({ children }) => {
 
   const withdraw = async (
     fromAccount: string,
-    bridgeContract: EosBridgeContract
+    bridgeContract: string
   ): Promise<TransactResult> => {
     const transaction = wax.api.transact(
       {

@@ -33,6 +33,10 @@ interface TransferContextProps {
   fetchBalance: () => Promise<number>;
 }
 
+const waxBluBridgerContract = process.env.EOS_BLU_BRIDGER_CONTRACT;
+const eosTokenContract = process.env.EOS_TOKEN_CONTRACT
+const eosTokenSymbol = process.env.EOS_TOKEN_SYMBOL
+
 const TransferContext = createContext<Partial<TransferContextProps>>({
   state: initialState,
 });
@@ -72,21 +76,21 @@ const TransferContextProvider: React.FC = ({ children }) => {
       addLoadingLog(
         'Waiting for approval from Wax Wallet to transfer to bridge.'
       );
-      await wax.transfer('BLU', 'bludactokens', 'blubridgerv1', amount);
+      await wax.transfer(eosTokenSymbol, eosTokenContract, waxBluBridgerContract, amount);
 
-      addSuccessLog(`Successfully transferred ${amount} BLU to bridge.`);
+      addSuccessLog(`Successfully transferred ${amount} ${eosTokenSymbol} to bridge.`);
       addLoadingLog('Waiting for approval to transfer to Polygon');
       const listendToLogSend = wax.listenToLogSend(wax.accountName);
       await wax.send(
         wax.accountName,
-        'BLU',
-        'blubridgerv1',
+        eosTokenSymbol,
+        waxBluBridgerContract,
         WaxToPolygonBluChainId,
         hexToPrependedZeros(polygon.address),
         amount
       );
       addSuccessLog(
-        'Successfully submitted transaction (Transfer BLU to Polygon)'
+        `Successfully submitted transaction (Transfer ${eosTokenSymbol} to Polygon)`
       );
       addLoadingLog('Confirming Bridge to Polygon transaction.');
       const transferId = await listendToLogSend;
@@ -116,7 +120,7 @@ const TransferContextProvider: React.FC = ({ children }) => {
       addLoadingLog('Waiting to approve spend amount for transaction.');
       await polygon.approve(polygon.address, amount, 4);
       addSuccessLog('Successfully approved spend amount for transaction.');
-      addLoadingLog('Waiting for approval to send BLU tokens to bridge.');
+      addLoadingLog(`Waiting for approval to send ${eosTokenSymbol} tokens to bridge.`);
       const claimId = await polygon.bridgeSend(
         polygon.address,
         wax.accountName,
@@ -124,9 +128,9 @@ const TransferContextProvider: React.FC = ({ children }) => {
         amount,
         4
       );
-      addSuccessLog('Successfully sent BLU tokens to bridge.');
+      addSuccessLog(`Successfully sent ${eosTokenSymbol} tokens to bridge.`);
       addLoadingLog(
-        'Waiting for approval to claim BLU tokens from target blockchain.'
+        `Waiting for approval to claim ${eosTokenSymbol} tokens from target blockchain.`
       );
       const receivedData = await wax.getReceiveData(claimId);
       if (receivedData.oracles.length === 0) {
@@ -136,12 +140,12 @@ const TransferContextProvider: React.FC = ({ children }) => {
         `Successfully verified receive transaction validity ID: ${receivedData.id}`
       );
       addLoadingLog(`Waiting for approval from Wax Wallet to receive tokens.`);
-      await wax.claim(wax.accountName, 'blubridgerv1', claimId);
+      await wax.claim(wax.accountName, waxBluBridgerContract, claimId);
       addSuccessLog(`Successfully submitted transaction to claim tokens.`);
       addLoadingLog(
         'Waiting for approval to withdraw your tokens from the bridge.'
       );
-      const withdraw = await wax.withdraw(wax.accountName, 'blubridgerv1');
+      const withdraw = await wax.withdraw(wax.accountName, waxBluBridgerContract);
       addSuccessLog(
         `Successfully submitted transaction to withdraw tokens. <a href="https://wax.bloks.io/transaction/${withdraw.transaction_id}" target="_blank">View transaction</a>`
       );
@@ -171,7 +175,7 @@ const TransferContextProvider: React.FC = ({ children }) => {
   const fetchBalance = useCallback(() => {
     const { from } = transferState;
     if (from === 'wax') {
-      return wax.fetchBalance('BLU', 'bludactokens');
+      return wax.fetchBalance(eosTokenSymbol, eosTokenContract);
     }
     if (from === 'polygon') {
       return polygon.fetchBalance();

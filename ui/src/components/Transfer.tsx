@@ -10,6 +10,8 @@ interface BalanceState {
   isFetching: boolean;
 }
 
+const eosTokenSymbol = process.env.EOS_TOKEN_SYMBOL
+
 const TransferLogs = () => {
   const { transferLogs } = useTransfer();
   const getCssClass = (log: Log) => {
@@ -27,7 +29,7 @@ const TransferLogs = () => {
   }
   return (
     <div className="mt-3">
-      Transferring BLU tokens...
+      Transferring {eosTokenSymbol} tokens...
       <div className="font-size-14px">
         {transferLogs.map((log) => (
           <div key={log.message} className="d-flex align-items-center">
@@ -54,6 +56,7 @@ const Transfer = () => {
   } = useTransfer();
   const { amount, from, to, isProcessing } = state;
 
+  const [previousFrom, setPreviousFrom] = useState<string>(null);
   const [balance, setBalance] = useState<BalanceState>({
     amount: 0,
     isFetching: true,
@@ -63,13 +66,14 @@ const Transfer = () => {
     if (!isReadyForTransfer) {
       return;
     }
-    if (from) {
+    if (from !== previousFrom) {
+      setPreviousFrom(from);
       setBalance((currentState) => ({ ...currentState, isFetching: true }));
       fetchBalance().then((amount) => {
         setBalance({ amount, isFetching: false });
       });
     }
-  }, [isReadyForTransfer, from, setBalance, fetchBalance]);
+  }, [isReadyForTransfer, from, previousFrom, setBalance, fetchBalance]);
 
   return (
     <main className={`mt-5 card p-5 border-0 rounded-16`}>
@@ -106,7 +110,7 @@ const Transfer = () => {
           </button>
           {!balance.isFetching && (
             <span className="font-size-12px">
-              {balance.amount} BLU tokens available
+              {balance.amount} {eosTokenSymbol} tokens available
             </span>
           )}
           <TransferLogs />
