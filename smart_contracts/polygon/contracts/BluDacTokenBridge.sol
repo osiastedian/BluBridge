@@ -7,6 +7,9 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 abstract contract BridgeERC20 is ERC20Burnable {
     function mint(address account, uint256 amount) public virtual;
@@ -29,10 +32,11 @@ struct SendTransferData {
     bool claimed;
 }
 
-contract BluDacTokenBridge is AccessControl {
+contract BluDacTokenBridge is AccessControl, Pausable, ReentrancyGuard {
     using ECDSA for bytes32;
     using Address for address;
     using EnumerableSet for EnumerableSet.Bytes32Set;
+    using SafeMath for uint256;
 
     event RegisterToken(address indexed tokenAddress);
     event UnregisterToken(address indexed tokenAddress);
@@ -57,6 +61,7 @@ contract BluDacTokenBridge is AccessControl {
     bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
     uint256 public minimumOracleConfirmations = 3;
     uint8 public chainId;
+    uint256 public burnRate = 20;
 
     mapping(uint64 => TransferData) public transferMap;
     mapping(address => bool) public supportedTokens;
@@ -71,8 +76,22 @@ contract BluDacTokenBridge is AccessControl {
         chainId = _chainId;
     }
 
+    function setBurnRate(uint256 _burnRate) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        burnRate = _burnRate;
+    }
+
+    function pause() public whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        _pause();
+    }
+
+    function unpause() public whenPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+        _unpause();
+    }
+
     function registerToken(address tokenContractAddress)
         public
+        nonReentrant
+        whenNotPaused
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         require(tokenContractAddress.isContract(), "Address is not a contract");
@@ -86,6 +105,8 @@ contract BluDacTokenBridge is AccessControl {
 
     function unregisterToken(address tokenContractAddress)
         public
+        nonReentrant
+        whenNotPaused
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         require(
@@ -98,6 +119,8 @@ contract BluDacTokenBridge is AccessControl {
 
     function registerChainId(uint8 recepientChainId)
         public
+        nonReentrant
+        whenNotPaused
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         require(
@@ -110,6 +133,8 @@ contract BluDacTokenBridge is AccessControl {
 
     function ungisterChainId(uint8 recepientChainId)
         public
+        nonReentrant
+        whenNotPaused
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         require(supportedChainIds[recepientChainId], "ChainId not supported");
@@ -144,7 +169,7 @@ contract BluDacTokenBridge is AccessControl {
         uint256 amount,
         uint8 toChainId,
         bytes32 toAddress
-    ) public returns (uint256) {
+    ) public nonReentrant whenNotPaused returns (uint256) {
         require(tokenContractAddress.isContract(), "Address is not a contract");
         require(
             supportedTokens[tokenContractAddress],
@@ -154,11 +179,15 @@ contract BluDacTokenBridge is AccessControl {
 
         BridgeERC20 erc20 = BridgeERC20(tokenContractAddress);
         erc20.burnFrom(msg.sender, amount);
+        uint256 maxPercentage = 100;
+        uint256 modifiedAmount = amount
+            .mul(maxPercentage.sub(burnRate))
+            .div(maxPercentage);
 
         uint256 id = block.number;
         sendTransferMap[id] = SendTransferData({
             id: id,
-            amount: amount,
+            amount: modifiedAmount,
             chainId: toChainId,
             toAddress: toAddress,
             tokenContractAddress: tokenContractAddress,
@@ -170,7 +199,7 @@ contract BluDacTokenBridge is AccessControl {
             tokenContractAddress,
             toAddress,
             toChainId,
-            amount,
+            modifiedAmount,
             msg.sender
         );
         return id;
@@ -187,6 +216,8 @@ contract BluDacTokenBridge is AccessControl {
 
     function sign(uint256 sendId, bytes32 signature)
         public
+        nonReentrant
+        whenNotPaused
         onlyRole(ORACLE_ROLE)
     {
         require(sendTransferMap[sendId].id != 0, "Send Id does not exist");
@@ -200,7 +231,7 @@ contract BluDacTokenBridge is AccessControl {
         address tokenAddress,
         bytes memory data,
         bytes[] calldata signatures
-    ) public {
+    ) public nonReentrant whenNotPaused {
         bytes32 message = keccak256(data);
         bytes32 hashed = message.toEthSignedMessageHash();
         uint8 validSignatures;

@@ -1,5 +1,5 @@
 const truffleAssertions = require("truffle-assertions");
-const Bridge = artifacts.require("TokenBridge");
+const Bridge = artifacts.require("BluDacTokenBridge");
 const BluToken = artifacts.require("BluDacToken");
 
 contract("Bridge", (accounts) => {
@@ -10,9 +10,9 @@ contract("Bridge", (accounts) => {
     minterRole = await bluToken.MINTER_ROLE();
   });
 
-  it("should have chain id of 1", async () => {
+  it("should have chain id of 2", async () => {
     const chainId = await bridge.chainId();
-    expect(chainId.toNumber()).to.be.equal(1);
+    expect(chainId.toNumber()).to.be.equal(2);
   });
   it("should be able to register blu token", async () => {
     await bridge.registerToken(bluToken.address);
@@ -45,7 +45,7 @@ contract("Bridge", (accounts) => {
       {
         propertyOne: 1,
         propertyTwo: 2000,
-        propertyThree: 3,
+        propertyThree: 2,
         propertyFour: bluToken.address,
         propertyFive: accounts[4],
       }
@@ -84,7 +84,7 @@ contract("Bridge", (accounts) => {
     const transferData = await bridge.transferMap(1);
     expect(transferData.id.toNumber()).to.be.equal(1);
     expect(transferData.amount.toNumber()).to.be.equal(2000);
-    expect(transferData.chainId.toNumber()).to.be.equal(3);
+    expect(transferData.chainId.toNumber()).to.be.equal(2);
     expect(transferData.tokenAddress).to.be.equal(bluToken.address);
     expect(transferData.toAddress).to.be.equal(accounts[4]);
   });
@@ -122,6 +122,9 @@ contract("Bridge", (accounts) => {
         { from: accounts[2] }
       );
 
+      const burnRate = 20;
+      const remainingAmount = toAmount * ((100 - burnRate) / 100);
+
       truffleAssertions.eventEmitted(
         tx,
         "Sent",
@@ -131,12 +134,86 @@ contract("Bridge", (accounts) => {
             toAddress
               .toString()
               .startsWith(web3.utils.asciiToHex(waxAccount)) &&
-            amount.toNumber() === toAmount &&
+            amount.toNumber() === remainingAmount &&
             toChainId.toNumber() === waxChainId &&
             fromAddress === accounts[2]
           );
         }
       );
+    });
+
+    it("should be able to send full amount when burn rate is set to zero", async () => {
+      const toAmount = 2000;
+      await bridge.setBurnRate(0);
+
+      await bluToken.mint(accounts[2], toAmount, { from: accounts[2] });
+      let balance = await bluToken.balanceOf(accounts[2]);
+
+      expect(balance.toNumber()).to.be.equal(toAmount);
+
+      await bluToken.approve(bridge.address, toAmount, { from: accounts[2] });
+      const allowance = await bluToken.allowance(accounts[2], bridge.address);
+
+      expect(allowance.toNumber()).to.be.equal(toAmount);
+
+      const waxAccount = "alice";
+
+      const tx = await bridge.send(
+        bluToken.address,
+        balance,
+        waxChainId,
+        web3.utils.asciiToHex(waxAccount),
+        { from: accounts[2] }
+      );
+
+      const burnRate = 0;
+      const remainingAmount = toAmount * ((100 - burnRate) / 100);
+
+      truffleAssertions.eventEmitted(
+        tx,
+        "Sent",
+        ({ id, fromAddress, toChainId, toAddress, amount }) => {
+          return (
+            id.toNumber() === tx.logs[0].blockNumber &&
+            toAddress
+              .toString()
+              .startsWith(web3.utils.asciiToHex(waxAccount)) &&
+            amount.toNumber() === remainingAmount &&
+            toChainId.toNumber() === waxChainId &&
+            fromAddress === accounts[2]
+          );
+        }
+      );
+    });
+
+    context("contract is paused", () => {
+      before(async () => {
+        await bridge.pause({ from: accounts[0] });
+      });
+
+      it("should error when trying to send", async () => {
+        await truffleAssertions.reverts(
+          bridge.send(
+            bluToken.address,
+            1000,
+            waxChainId,
+            web3.utils.asciiToHex("alice"),
+            { from: accounts[2] }
+          ),
+          "Pausable: paused"
+        );
+      });
+    });
+
+    context("contract is unpaused", () => {
+      before(async () => {
+        await bridge.unpause({ from: accounts[0] });
+      });
+
+      it("should mark the contract unpaused", async () => {
+        const isPaused = await bridge.paused();
+        expect(isPaused).to.be.equal(false);
+      });
     });
   });
 });
