@@ -306,3 +306,19 @@ void blubridge::require_oracle( eosio::name account) {
     require_auth(account);
     oracles_.get(account.value, "Account is not an oracle");
 }
+
+void blubridge::cancel( name from, uint64_t id ){
+
+	require_auth( from );
+
+    auto item = transferdata_.find(id);
+    check(item != transferdata_.end(), "ID is not found");
+	check(item->account == from, "User does not own transaction. Cannot claim");
+	check(!item->claimed, "Already marked as claimed, Cannot cancel");
+
+    uint32_t now = current_time_point().sec_since_epoch();
+	auto time_diff = now - item->time;
+	check( time_diff > 604800, "Cannot cancel, need 7 days for transaction to be cancelled" );
+
+	transferdata_.erase(item);
+}

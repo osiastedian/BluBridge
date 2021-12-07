@@ -238,11 +238,15 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		[[eosio::action]] void withdraw( eosio::name from );
 		 using withdraw_action = eosio::action_wrapper<"withdraw"_n, &blubridge::withdraw>;
 
+		[[eosio::action]] void cancel( name from, uint64_t id );
+		 using cancel_action = eosio::action_wrapper<"cancel"_n, &blubridge::cancel>;
+
 		/* 
 		 * Notification function listening to specified smart contract in annotation
 		 * Trigger only when a transferred action is sent in bludactokens smart contract
 		 */
 		[[eosio::on_notify("bludactokens::transfer")]]
 		void on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo );
+
 };
 }

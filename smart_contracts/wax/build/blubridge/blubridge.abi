@@ -64,6 +64,20 @@
             ]
         },
         {
+            "name": "cancel",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
             "name": "chain_item",
             "base": "",
             "fields": [
@@ -335,6 +349,11 @@
         }
     ],
     "actions": [
+        {
+            "name": "cancel",
+            "type": "cancel",
+            "ricardian_contract": ""
+        },
         {
             "name": "claim",
             "type": "claim",
