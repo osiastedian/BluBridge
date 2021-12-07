@@ -18,11 +18,11 @@ spec:
           command: ['yarn', 'eos']
           imagePullPolicy: Always
           env:
-            - name: POLYGON_API_ENDPOINT
+            - name: ETH_HTTP_API_ENDPOINT
               value: {{ .Values.endpoints.polygon.https }}
-            - name: POLYGON_WS_ENDPOINT
+            - name: ETH_WEBSOCKET_URI
               value: {{ .Values.endpoints.polygon.wss }}
-            - name: POLYGON_CONTRACT_ADDRESS
+            - name: ETH_CONTRACT_ADDRESS
               value: {{ .Values.contract.polygon }}
             - name: EOS_API_ENDPOINT
               value: {{ .Values.endpoints.eos.https }}
@@ -36,7 +36,5 @@ spec:
               value: {{ .Values.eosAccount  }}
             - name: ORACLE_EOS_PRIVATE_KEY
               value: {{ .Values.eosPrivateKey  }}
-            - name: ORACLE_POLYGON_ADDRESS
-              value: {{ .Values.polygonAddress  }}
-            - name: ORACLE_POLYGON_PRIVATE_KEY
+            - name: ETH_PRIVATE_KEY
               value: {{ .Values.polygonPrivateKey  }}

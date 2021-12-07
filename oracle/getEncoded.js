@@ -13,24 +13,29 @@ const encoded = web3.eth.abi.encodeParameter(
     },
   },
   {
-    propertyOne: 3,
+    propertyOne: 4,
     propertyTwo: web3.utils
       .toBN(web3.utils.toWei(`5.0000`, 'ether'))
       .toString(),
-    propertyThree: 2,
-    propertyFour: '0xAd290B32ffB0886CCbF933A6307BF795A44C99e0',
-    propertyFive: '0x50872f2db2a5d456e0c637bb7f5e188d55472a8c',
+    propertyThree: 3,
+    propertyFour: '0xF6287d13de5c52cd320902C939C188217477F05b',
+    propertyFive: '0x9F786f29c5a4D192D442fc9237E142cbD99B573e',
   }
 );
 
-const signatures = [
-  '0x6a2cba98e5f66d9edd9dd1e4023cea335b86fb70dc3c71ae6ddb842a03e94122668812b42a5ac1ffa67701bce42914b7a8c871c3ea753721efff844e9750ff871b',
-  '0x9571f2a07ba4a84ad6514bf934fb9990f9606505b951c593fe4551864991dcc95264dec26d46b5712ecd9a2c18a1009a0876b1d09d5f6b3c426482ee75c352141c',
-  '0x4845ac1fa8339ee671f3d301229e2d23e5c61ebbba9fa53c48e40abd2666e81902c1922fdc2c700da3d82df62157a16f97efcb94b2ea536805756f4c4c1506251c',
-  '0x1820a07883cf2e8caf830e58cd1a7d3b884ce1ac17830157c63bbef3d67efeda6e31f5eaa2a6cec15e7198ff29132dc1cc30486a2b8f0a1ebc042ad01d2de7bc1c',
+const privateKeys = [
+  '4ac2da080b6e6f793e83bf0f6a75bd7a21f7dc605b09f685b647ec51cdbbf285',
+  '65ec1468b57345a16f3fa5e5c75ca64325acb65c332b7577ebd8e416c024435f',
+  '4ce9d8a319b28d47c88afc740aa0ac08135b47f557d16dc3feb35828c107c57d',
+  '58a7b95147d30d309ad62776c85dd89fa14fc416730bb2630bbfe18b35a47003',
 ];
 
-console.log({ encoded, signatures: JSON.stringify(signatures) });
+const signatures = privateKeys.map(
+  (privateKey) =>
+    web3.eth.accounts.sign(web3.utils.sha3(encoded), privateKey).signature
+);
+
+console.log({ encoded, signatures: JSON.stringify(signatures).replaceAll('"', '') });
 // const hexResult = web3.utils.hexToAscii(
 //   '0x61747971786d737a766e736b0000000000000000000000000000000000000000'
 // );

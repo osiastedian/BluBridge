@@ -1,6 +1,6 @@
-POLYGON_API_ENDPOINT = "https://matic-mumbai.chainstacklabs.com/"
-POLYGON_WS_ENDPOINT = "wss://polygon-mumbai.g.alchemy.com/v2/1cpp2y8ecHsghIaPkqro86Hn9WN0B51h"
-POLYGON_CONTRACT_ADDRESS = "0x212fd1159f219421715B6bb7aAa96e3C5695bf1B"
+ETH_HTTP_API_ENDPOINT = "https://matic-mumbai.chainstacklabs.com/"
+ETH_WEBSOCKET_URI = "wss://polygon-mumbai.g.alchemy.com/v2/1cpp2y8ecHsghIaPkqro86Hn9WN0B51h"
+ETH_CONTRACT_ADDRESS = "0x212fd1159f219421715B6bb7aAa96e3C5695bf1B"
 
 EOS_API_ENDPOINT = "https://api.waxtest.eosn.io"
 EOS_CONTRACT_ACCOUNT = "bvctvozrlgrg"
@@ -11,5 +11,4 @@ DFUSE_NETWORK = "testnet.eos.dfuse.io"
 ORACLE_EOS_ACCOUNT = "hbjsvradtjao"
 ORACLE_EOS_PRIVATE_KEY = "5JfkBQSF1VwjDvuNtqG5iytX4ehQJt5J7ESemtBypy1idxHzCKs"
 
-ORACLE_POLYGON_ADDRESS = "0xe0cbF38A0c610113379C086DC79CCaAf1EB5C20B"
-ORACLE_POLYGON_PRIVATE_KEY = "4ac2da080b6e6f793e83bf0f6a75bd7a21f7dc605b09f685b647ec51cdbbf285"
+ETH_PRIVATE_KEY = "4ac2da080b6e6f793e83bf0f6a75bd7a21f7dc605b09f685b647ec51cdbbf285"

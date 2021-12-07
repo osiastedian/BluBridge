@@ -10,6 +10,10 @@ jobs:
           echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
           cd oracle
 
+      # Copy ABIs
+      - run: |
+          cp -r ./smart_contracts/solidity/build/contracts/* ./oracle/abi
+
       # build the application image
       - run: |
           cd oracle

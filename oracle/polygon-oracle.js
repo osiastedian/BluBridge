@@ -15,14 +15,13 @@ dotenv.config();
 const LOG = console.log;
 // eslint-disable-next-line no-console
 const ERROR = console.error;
-const wsEndpoint = process.env.POLYGON_WS_ENDPOINT;
-const contractAddress = process.env.POLYGON_CONTRACT_ADDRESS;
+const wsEndpoint = process.env.ETH_WEBSOCKET_URI;
+const contractAddress = process.env.ETH_CONTRACT_ADDRESS;
 const claimedTopic =
   '0xce3bcb6e219596cf26007ffdfaae8953bc3f76e3f36c0a79b23e28020da3222e';
 const sentTopic =
   '0x0af9a96d5eab584bc97107a072072e71ae2353e7fa0ad649f0a7bb5b542e0877';
 const eosOracle = process.env.ORACLE_EOS_ACCOUNT;
-const polygonOracle = process.env.ORACLE_POLYGON_ADDRESS;
 const eosContractAccount = process.env.EOS_CONTRACT_ACCOUNT;
 
 const web3 = new Web3();
@@ -132,7 +131,6 @@ const amountToWaxQuantity = (tokenAmount, tokenAddress) => {
 ws.on('open', () => {
   LOG('Connection Established!', {
     eosOracle,
-    polygonOracle,
     contractAddress,
     claimedTopic,
     sentTopic,
