@@ -2,6 +2,7 @@
 #include <eosio/asset.hpp>
 #include <eosio/system.hpp>
 #include <eosio/transaction.hpp>
+#include <eosio/singleton.hpp>
 
 using namespace eosio;
 using namespace std;
@@ -20,7 +21,7 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		 */
 		static constexpr uint8_t ORACLE_CONFIRMATIONS = 2;
 		static constexpr uint8_t CONTRACT_CHAIN_ID = 1;
-		const eosio::name tokencontract { "bludactokens"_n }; 
+		const eosio::name tokencontract { "eosio.token"_n }; 
 
 		/* 
 		 * Description: 
@@ -238,15 +239,35 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		[[eosio::action]] void withdraw( eosio::name from );
 		 using withdraw_action = eosio::action_wrapper<"withdraw"_n, &blubridge::withdraw>;
 
+		 //TODO: new implementations
 		[[eosio::action]] void cancel( name from, uint64_t id );
 		 using cancel_action = eosio::action_wrapper<"cancel"_n, &blubridge::cancel>;
+
+		// struct [[eosio::table("state_data")]] state_item {
+		// 	 bool pause;
+		//  };
+		struct [[eosio::table("states")]] state_item {
+			bool is_paused;
+		};
+		typedef eosio::singleton<"states"_n, state_item> state_type;
+		state_type     state_;
+
+		[[eosio::action]] void pause();
+		 using pause_action = eosio::action_wrapper<"pause"_n, &blubridge::pause>;
+
+		[[eosio::action]] void unpause();
+		 using unpause_action = eosio::action_wrapper<"unpause"_n, &blubridge::unpause>;
+
+		[[eosio::action]] void dbgtime(uint64_t id, uint32_t time_modify );
+		 using dbgchangetime_action = eosio::action_wrapper<"dbgtime"_n, &blubridge::dbgtime>;
 
 		/* 
 		 * Notification function listening to specified smart contract in annotation
 		 * Trigger only when a transferred action is sent in bludactokens smart contract
 		 */
-		[[eosio::on_notify("bludactokens::transfer")]]
+		[[eosio::on_notify("eosio.token::transfer")]]
 		void on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo );
+
 
 };
 }

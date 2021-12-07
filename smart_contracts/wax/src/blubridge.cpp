@@ -10,10 +10,16 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 	symbols_(get_self(), get_self().value),
 	balances_(get_self(), get_self().value),
 	receive_(get_self(), get_self().value),
+	state_(get_self(), get_self().value),
 	transferdata_(get_self(), get_self().value)
 {}
 
 void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
+ 
+	if( state_.get().is_paused ) {
+		print_f("EARL_DEBUG, state is paused");
+		return ;
+	}
 
     require_auth(from);
 
@@ -32,6 +38,13 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
     auto item = balances_.find( from.value );
 	check( quantity <= item->quantity , "Not enough tokens to transfer" );
 	// End of cross check logic
+	
+	//TODO: check burn rate
+	uint8_t burnRate = 20;
+	uint64_t maxPercentage = 100;
+	auto modifiedAmount = (quantity * (maxPercentage - burnRate) ) / maxPercentage;
+	print_f("EARL_DEBUG modified amount [%]", modifiedAmount );
+	
 
     uint64_t transaction_id = transferdata_.available_primary_key();
 	print_f("transaction_id[%]", transaction_id );
@@ -40,7 +53,7 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
         t.id = transaction_id;
         t.time = now;
         t.account = from;
-        t.quantity = quantity;
+        t.quantity = modifiedAmount;
         t.chain_id = chain_id;
         t.to_address = eth_address;
         t.claimed = false;
@@ -49,7 +62,7 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
     action(
         permission_level{get_self(), "active"_n},
         get_self(), "logsend"_n,
-        make_tuple(transaction_id, now, from, quantity, chain_id, eth_address)
+        make_tuple(transaction_id, now, from, modifiedAmount, chain_id, eth_address)
     ).send();
 
 }
@@ -227,6 +240,12 @@ void blubridge::claim( name from, uint64_t id ){
 		t.claimed = true;
 	});
 
+	//TODO: check burn rate
+	uint8_t burnRate = 20;
+	uint64_t maxPercentage = 100;
+	auto modifiedAmount = (item->quantity * (maxPercentage - burnRate) ) / maxPercentage;
+	print_f("EARL_DEBUG modified amount [%]", modifiedAmount );
+
 	//Get structure individual item 
     auto receipt_item = balances_.find( from.value );
 
@@ -234,7 +253,7 @@ void blubridge::claim( name from, uint64_t id ){
 	if( receipt_item != balances_.end() ){
 
 		balances_.modify(*receipt_item, same_payer, [&](auto &t){
-			t.quantity += item->quantity;
+			t.quantity += modifiedAmount;
 			t.memo = "Transferred from polygon";
 		});
 
@@ -242,7 +261,7 @@ void blubridge::claim( name from, uint64_t id ){
 
 		balances_.emplace( get_self(), [&](auto &r){
 			r.from_account = item->to_account;
-			r.quantity = item->quantity;
+			r.quantity = modifiedAmount;
 			r.memo = "Transferred from polygon";
 		});
 
@@ -321,4 +340,39 @@ void blubridge::cancel( name from, uint64_t id ){
 	check( time_diff > 604800, "Cannot cancel, need 7 days for transaction to be cancelled" );
 
 	transferdata_.erase(item);
+}
+
+void blubridge::pause(){
+
+	check( state_.exists(), "Not yet initialized");
+	// state_type state( get_self(), get_self().value);
+	// state.set( {true}, get_self() );
+	auto st = state_.get();
+	st.is_paused = true;
+
+	state_.set(st, get_self());
+	print_f("setting state to true ");
+
+}
+
+void blubridge::unpause(){
+
+	check( state_.exists(), "Not yet initialized");
+
+	auto st = state_.get();
+	st.is_paused = false;
+
+	state_.set(st, get_self());
+	print_f("setting state to false ");
+
+}
+
+void blubridge::dbgtime(uint64_t id, uint32_t time_modify ) {
+
+    auto item = transferdata_.find(id);
+    check(item != transferdata_.end(), "Data is not found");
+	
+	transferdata_.modify(*item, same_payer, [&](auto &t){
+		t.time = time_modify;
+	});
 }

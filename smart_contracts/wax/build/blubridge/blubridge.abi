@@ -128,6 +128,20 @@
             ]
         },
         {
+            "name": "dbgtime",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "time_modify",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
             "name": "logsend",
             "base": "",
             "fields": [
@@ -166,6 +180,11 @@
                     "type": "name"
                 }
             ]
+        },
+        {
+            "name": "pause",
+            "base": "",
+            "fields": []
         },
         {
             "name": "receive_item",
@@ -298,6 +317,16 @@
             ]
         },
         {
+            "name": "state_item",
+            "base": "",
+            "fields": [
+                {
+                    "name": "is_paused",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
             "name": "sym_item",
             "base": "",
             "fields": [
@@ -306,6 +335,11 @@
                     "type": "symbol"
                 }
             ]
+        },
+        {
+            "name": "unpause",
+            "base": "",
+            "fields": []
         },
         {
             "name": "unregchainid",
@@ -365,8 +399,18 @@
             "ricardian_contract": ""
         },
         {
+            "name": "dbgtime",
+            "type": "dbgtime",
+            "ricardian_contract": ""
+        },
+        {
             "name": "logsend",
             "type": "logsend",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "pause",
+            "type": "pause",
             "ricardian_contract": ""
         },
         {
@@ -397,6 +441,11 @@
         {
             "name": "sign",
             "type": "sign",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "unpause",
+            "type": "unpause",
             "ricardian_contract": ""
         },
         {
@@ -445,6 +494,13 @@
         {
             "name": "receivedata",
             "type": "receive_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "states",
+            "type": "state_item",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
