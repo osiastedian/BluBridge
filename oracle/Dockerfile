@@ -13,3 +13,7 @@ COPY eos-token-map.js /app/
 COPY eos-oracle.js /app/
 
 COPY polygon-oracle.js /app/
+
+COPY bsc-oracle.js /app/
+
+COPY ./abi /abi

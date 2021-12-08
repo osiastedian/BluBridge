@@ -19,10 +19,10 @@ const logsendAction = 'logsend';
 const signAction = 'sign';
 const oracleAccount = process.env.ORACLE_EOS_ACCOUNT;
 
-const web3 = new Web3(process.env.POLYGON_API_ENDPOINT);
+const web3 = new Web3(process.env.ETH_HTTP_API_ENDPOINT);
 
 const account = web3.eth.accounts.privateKeyToAccount(
-  process.env.ORACLE_POLYGON_PRIVATE_KEY
+  process.env.ETH_PRIVATE_KEY
 );
 
 const signatureProvider = new JsSignatureProvider([
@@ -47,7 +47,7 @@ const dfuseClientOptions = {
 LOG('CONFIG:', {
   ethAddress: account.address,
   dfuseClientOptions,
-  polygonApiEndpoint: process.env.POLYGON_API_ENDPOINT,
+  polygonApiEndpoint: process.env.ETH_HTTP_API_ENDPOINT,
 });
 
 const registerSignature = (id, signature) => {
@@ -165,14 +165,14 @@ client.graphql(
         const chainId = action.json.chain_id;
         const [amount, symbol] = quantity.split(' ');
 
-        const token = symbolToEthAddressMap[symbol];
+        const tokenAddress = symbolToEthAddressMap[symbol][chainId];
 
         const parsedData = {
           id,
           chainId,
           toAddress: toAddress.replace('000000000000000000000000', '0x'),
           amount,
-          tokenAddress: token.address,
+          tokenAddress,
         };
         LOG('Received Sent:', parsedData);
         const signature = generateEthSignature(parsedData);

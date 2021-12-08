@@ -5,6 +5,8 @@
   "scripts": {
     "eos": "node eos-oracle.js",
     "polygon": "node polygon-oracle.js",
+    "bsc": "node bsc-oracle.js",
+    "copy:abis": "cp -r ../smart_contracts/solidity/build/contracts/* ./abi",
     "lint": "eslint .",
     "format:write": "prettier --write ."
   },

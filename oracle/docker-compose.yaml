@@ -5,13 +5,12 @@ services:
     image: oracle-base
     command: ['yarn', 'eos']
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
+      ETH_PRIVATE_KEY: 4ac2da080b6e6f793e83bf0f6a75bd7a21f7dc605b09f685b647ec51cdbbf285
+      ETH_HTTP_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: atyqxmszvnsk
       ORACLE_EOS_PRIVATE_KEY: 5K5fQ4RUVnZmcHxCFE8LgLMJtGkCCHobGYdfMbgF5uv3KJszRiD
-      ORACLE_POLYGON_ADDRESS: '0xe0cbF38A0c610113379C086DC79CCaAf1EB5C20B'
-      ORACLE_POLYGON_PRIVATE_KEY: 4ac2da080b6e6f793e83bf0f6a75bd7a21f7dc605b09f685b647ec51cdbbf285
-      POLYGON_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
+      
     volumes:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
@@ -22,13 +21,12 @@ services:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
+      ETH_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: wtibpjgqsidc
       ORACLE_EOS_PRIVATE_KEY: 5KNZU2AeW7qkCLwQpSkwPhtTrgevfNaCrDfoFQNmbxc1MoHHSQP
-      ORACLE_POLYGON_ADDRESS: '0xd4038C9a803eB3f543e5D7da632B8D69eef0C50B'
-      ORACLE_POLYGON_PRIVATE_KEY: 65ec1468b57345a16f3fa5e5c75ca64325acb65c332b7577ebd8e416c024435f
-      POLYGON_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
+      ETH_PRIVATE_KEY: 65ec1468b57345a16f3fa5e5c75ca64325acb65c332b7577ebd8e416c024435f
+      ETH_HTTP_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
   eos-oracle3:
     image: oracle-base
     command: ['yarn', 'eos']
@@ -36,13 +34,12 @@ services:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
+      ETH_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: ojynoerkuepk
       ORACLE_EOS_PRIVATE_KEY: 5KhvjHnKYfGiML7DbGHCTuWmRTtrwkPnkyGCZLwVBMSAftd9CGH
-      ORACLE_POLYGON_ADDRESS: '0xe9DE131381d95DE62B5007b8FD166A84A0CB2D5A'
-      ORACLE_POLYGON_PRIVATE_KEY: 4ce9d8a319b28d47c88afc740aa0ac08135b47f557d16dc3feb35828c107c57d
-      POLYGON_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
+      ETH_PRIVATE_KEY: 4ce9d8a319b28d47c88afc740aa0ac08135b47f557d16dc3feb35828c107c57d
+      ETH_HTTP_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
   eos-oracle4:
     image: oracle-base
     command: ['yarn', 'eos']
@@ -50,67 +47,66 @@ services:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
+      ETH_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: hbjsvradtjao
       ORACLE_EOS_PRIVATE_KEY: 5JfkBQSF1VwjDvuNtqG5iytX4ehQJt5J7ESemtBypy1idxHzCKs
-      ORACLE_POLYGON_ADDRESS: '0x03130680483F7Ad50A0Fcf9eB636CbADE10f9b9f'
-      ORACLE_POLYGON_PRIVATE_KEY: 58a7b95147d30d309ad62776c85dd89fa14fc416730bb2630bbfe18b35a47003
-      POLYGON_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
-  polygon-oracle1:
+      ETH_PRIVATE_KEY: 58a7b95147d30d309ad62776c85dd89fa14fc416730bb2630bbfe18b35a47003
+      ETH_HTTP_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
+  bsc-oracle1:
     image: oracle-base
-    command: ['yarn', 'polygon']
+    command: ['yarn', 'bsc']
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
+      ORACLE_NAME: bsc-oracle-1
+      ETH_BRIDGE_ABI_PATH: '/abi/BluDacTokenBridge.json'
+      ETH_WEBSOCKET_URI: wss://speedy-nodes-nyc.moralis.io/49c1fb668dc25b5cae5d79df/bsc/testnet/ws
+      ETH_CONTRACT_ADDRESS: "0xb86adaed825c8515e524ea5c8bae0076ca2b96db"
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: atyqxmszvnsk
       ORACLE_EOS_PRIVATE_KEY: 5K5fQ4RUVnZmcHxCFE8LgLMJtGkCCHobGYdfMbgF5uv3KJszRiD
-      ORACLE_POLYGON_ADDRESS: '0xe0cbF38A0c610113379C086DC79CCaAf1EB5C20B'
-      ORACLE_POLYGON_PRIVATE_KEY: 4ac2da080b6e6f793e83bf0f6a75bd7a21f7dc605b09f685b647ec51cdbbf285
-      POLYGON_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
     volumes:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
-  polygon-oracle2:
+  bsc-oracle2:
     image: oracle-base
-    command: ['yarn', 'polygon']
+    command: ['yarn', 'bsc']
     volumes:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
+      ORACLE_NAME: bsc-oracle-2
+      ETH_BRIDGE_ABI_PATH: '/abi/BluDacTokenBridge.json'
+      ETH_WEBSOCKET_URI: wss://speedy-nodes-nyc.moralis.io/49c1fb668dc25b5cae5d79df/bsc/testnet/ws
+      ETH_CONTRACT_ADDRESS: "0xb86adaed825c8515e524ea5c8bae0076ca2b96db"
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: wtibpjgqsidc
       ORACLE_EOS_PRIVATE_KEY: 5KNZU2AeW7qkCLwQpSkwPhtTrgevfNaCrDfoFQNmbxc1MoHHSQP
-      ORACLE_POLYGON_ADDRESS: '0xd4038C9a803eB3f543e5D7da632B8D69eef0C50B'
-      ORACLE_POLYGON_PRIVATE_KEY: 65ec1468b57345a16f3fa5e5c75ca64325acb65c332b7577ebd8e416c024435f
-      POLYGON_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
-  polygon-oracle3:
+  bsc-oracle3:
     image: oracle-base
-    command: ['yarn', 'polygon']
+    command: ['yarn', 'bsc']
     volumes:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
+      ORACLE_NAME: bsc-oracle-3
+      ETH_BRIDGE_ABI_PATH: '/abi/BluDacTokenBridge.json'
+      ETH_WEBSOCKET_URI: wss://speedy-nodes-nyc.moralis.io/49c1fb668dc25b5cae5d79df/bsc/testnet/ws
+      ETH_CONTRACT_ADDRESS: "0xb86adaed825c8515e524ea5c8bae0076ca2b96db"
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: ojynoerkuepk
       ORACLE_EOS_PRIVATE_KEY: 5KhvjHnKYfGiML7DbGHCTuWmRTtrwkPnkyGCZLwVBMSAftd9CGH
-      ORACLE_POLYGON_ADDRESS: '0xe9DE131381d95DE62B5007b8FD166A84A0CB2D5A'
-      ORACLE_POLYGON_PRIVATE_KEY: 4ce9d8a319b28d47c88afc740aa0ac08135b47f557d16dc3feb35828c107c57d
-      POLYGON_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
-  polygon-oracle4:
+  bsc-oracle4:
     image: oracle-base
-    command: ['yarn', 'polygon']
+    command: ['yarn', 'bsc']
     volumes:
       - ./eos-token-map.js:/app/eos-token-map.js
       - .env:/app/.env
     environment:
-      POLYGON_CONTRACT_ADDRESS: '0x212fd1159f219421715B6bb7aAa96e3C5695bf1B'
+      ORACLE_NAME: bsc-oracle-4
+      ETH_BRIDGE_ABI_PATH: '/abi/BluDacTokenBridge.json'
+      ETH_WEBSOCKET_URI: wss://speedy-nodes-nyc.moralis.io/49c1fb668dc25b5cae5d79df/bsc/testnet/ws
+      ETH_CONTRACT_ADDRESS: "0xb86adaed825c8515e524ea5c8bae0076ca2b96db"
       EOS_CONTRACT_ACCOUNT: 'bvctvozrlgrg'
       ORACLE_EOS_ACCOUNT: hbjsvradtjao
       ORACLE_EOS_PRIVATE_KEY: 5JfkBQSF1VwjDvuNtqG5iytX4ehQJt5J7ESemtBypy1idxHzCKs
-      ORACLE_POLYGON_ADDRESS: '0x03130680483F7Ad50A0Fcf9eB636CbADE10f9b9f'
-      ORACLE_POLYGON_PRIVATE_KEY: 58a7b95147d30d309ad62776c85dd89fa14fc416730bb2630bbfe18b35a47003
-      POLYGON_API_ENDPOINT: https://matic-mumbai.chainstacklabs.com/
   
