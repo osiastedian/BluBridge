@@ -1,0 +1,22 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-token-map
+data:
+  eos-token-map.js: |
+    export default {
+        {{ .Values.common.symbol }}: {
+            address: {
+                2: '{{ .Values.tokenMap.polygonTokenAddress }}',
+                3: '{{ .Values.tokenMap.bscTokenAddress }}',
+            },
+        },
+        '{{ .Values.tokenMap.polygonTokenAddress }}': {
+            account: '{{ .Values.common.symbol }}',
+            decimals: 18,
+        },
+        '{{ .Values.tokenMap.bscTokenAddress }}': {
+            account: '{{ .Values.common.symbol }}',
+            decimals: 18,
+        },
+    };

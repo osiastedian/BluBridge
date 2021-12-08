@@ -1,32 +1,34 @@
-{{- if .Values.polygon.enabled }}
+{{- if .Values.bsc.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-oracle-polygon
+  name: {{ .Release.Name }}-oracle-bsc
 spec:
   selector:
     matchLabels:
-      app: oracle-polygon
+      app: oracle-bsc
   replicas: {{ default 1 .Values.replicaCount | int }}
   template:
     metadata:
       labels:
-        app: oracle-polygon
+        app: oracle-bsc
     spec:
       containers:
-        - name: oracle-polygon
-          image: {{ .Values.eos.image }}
-          command: ['yarn', 'polygon']
+        - name: oracle-bsc
+          image: {{ .Values.common.image }}
+          command: ['yarn', 'bsc']
           imagePullPolicy: Always
           env:
-            - name: ETH_HTTP_API_ENDPOINT
-              value: {{ .Values.polygon.https }}
+            - name: ORACLE_NAME
+              value: {{ .Values.bsc.abiPath }}
+            - name: ETH_BRIDGE_ABI_PATH
+              value: {{ .Values.bsc.abiPath }}
             - name: ETH_WEBSOCKET_URI
-              value: {{ .Values.polygon.wss }}
+              value: {{ .Values.bsc.websocketUri }}
             - name: ETH_CONTRACT_ADDRESS
-              value: {{ .Values.polygon.contractAddress }}
+              value: {{ .Values.bsc.contractAddress }}
             - name: EOS_API_ENDPOINT
-              value: {{ .Values.eos.https }}
+              value: {{ .Values.eos.httpsUri }}
             - name: EOS_CONTRACT_ACCOUNT
               value: {{ .Values.eos.contractAccount }}
             - name: DFUSE_API_KEY
@@ -34,9 +36,7 @@ spec:
             - name: DFUSE_NETWORK
               value: {{ .Values.eos.dfuse.network }}
             - name: EOS_ORACLE_ACCOUNT
-              value: {{ .Values.eos.oracleAccount }}
+              value: {{ .Values.eos.oracleAccount  }}
             - name: EOS_ORACLE_PRIVATE_KEY
               value: {{ .Values.eos.privateKey  }}
-            - name: ETH_PRIVATE_KEY
-              value: {{ .Values.polygonPrivateKey  }}
 {{ end }}

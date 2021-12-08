@@ -8,7 +8,7 @@ EOS_CONTRACT_ACCOUNT = "bvctvozrlgrg"
 DFUSE_API_KEY = "server_9c7c311de0cdd3799955ea2eb6eda910"
 DFUSE_NETWORK = "testnet.eos.dfuse.io"
 
-ORACLE_EOS_ACCOUNT = "hbjsvradtjao"
-ORACLE_EOS_PRIVATE_KEY = "5JfkBQSF1VwjDvuNtqG5iytX4ehQJt5J7ESemtBypy1idxHzCKs"
+EOS_ORACLE_ACCOUNT = "hbjsvradtjao"
+EOS_ORACLE_PRIVATE_KEY = "5JfkBQSF1VwjDvuNtqG5iytX4ehQJt5J7ESemtBypy1idxHzCKs"
 
 ETH_PRIVATE_KEY = "4ac2da080b6e6f793e83bf0f6a75bd7a21f7dc605b09f685b647ec51cdbbf285"

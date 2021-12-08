@@ -1,3 +1,4 @@
+{{- if .Values.eos.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,23 +19,38 @@ spec:
           command: ['yarn', 'eos']
           imagePullPolicy: Always
           env:
-            - name: ETH_HTTP_API_ENDPOINT
-              value: {{ .Values.endpoints.polygon.https }}
-            - name: ETH_WEBSOCKET_URI
-              value: {{ .Values.endpoints.polygon.wss }}
-            - name: ETH_CONTRACT_ADDRESS
-              value: {{ .Values.contract.polygon }}
-            - name: EOS_API_ENDPOINT
-              value: {{ .Values.endpoints.eos.https }}
+            - name: ORACLE_NAME
+              value: {{ .Release.Name }}
             - name: EOS_CONTRACT_ACCOUNT
-              value: {{ .Values.contract.eos }}
+              value: {{ .Values.eos.contractAccount }}
+            - name: EOS_ORACLE_ACCOUNT
+              value: {{ .Values.eos.oracleAccount  }}
+            - name: EOS_API_ENDPOINT
+              value: {{ .Values.eos.https }}
             - name: DFUSE_API_KEY
-              value: {{ .Values.dfuse.apiKey }}
+              value: {{ .Values.eos.dfuse.apiKey }}
             - name: DFUSE_NETWORK
-              value: {{ .Values.dfuse.network }}
-            - name: ORACLE_EOS_ACCOUNT
-              value: {{ .Values.eosAccount  }}
-            - name: ORACLE_EOS_PRIVATE_KEY
-              value: {{ .Values.eosPrivateKey  }}
-            - name: ETH_PRIVATE_KEY
-              value: {{ .Values.polygonPrivateKey  }}
+              value: {{ .Values.eos.dfuse.network }}
+            - name: EOS_ORACLE_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: eosPrivateKey
+            - name: POLYGON_ORACLE_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: polygonPrivateKey
+            - name: BSC_ORACLE_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: bscPrivateKey
+          volumeMounts:
+          - mountPath: /app
+            name: token-map
+      volumes:
+        - name: token-map
+          configMap:
+            name: {{ .Release.Name }}-token-map
+{{ end }}
