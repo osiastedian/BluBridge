@@ -16,8 +16,8 @@ const LOG = console.log;
 // eslint-disable-next-line no-console
 const ERROR = console.error;
 const name = process.env.ORACLE_NAME;
-const eosOracle = process.env.ORACLE_EOS_ACCOUNT;
-const eosOraclePrivateKey = process.env.ORACLE_EOS_PRIVATE_KEY;
+const eosOracle = process.env.EOS_ORACLE_ACCOUNT;
+const eosOraclePrivateKey = process.env.EOS_ORACLE_PRIVATE_KEY;
 const eosApiEndpoint = process.env.EOS_API_ENDPOINT;
 const eosContractAccount = process.env.EOS_CONTRACT_ACCOUNT;
 
@@ -74,7 +74,7 @@ const claimed = ({ id, toAddress, quantity }) => {
 
 const amountToWaxQuantity = (tokenAmount, tokenAddress) => {
   const tokenInfo = symbolToEthAddressMap[tokenAddress];
-  const amount = tokenAmount / `1e${tokenInfo.polygonDecimals}`;
+  const amount = tokenAmount / `1e${tokenInfo.decimals}`;
   return `${amount.toFixed(4)} ${tokenInfo.account}`;
 };
 

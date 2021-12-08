@@ -21,7 +21,7 @@ const claimedTopic =
   '0xce3bcb6e219596cf26007ffdfaae8953bc3f76e3f36c0a79b23e28020da3222e';
 const sentTopic =
   '0x0af9a96d5eab584bc97107a072072e71ae2353e7fa0ad649f0a7bb5b542e0877';
-const eosOracle = process.env.ORACLE_EOS_ACCOUNT;
+const eosOracle = process.env.EOS_ORACLE_ACCOUNT;
 const eosContractAccount = process.env.EOS_CONTRACT_ACCOUNT;
 
 const web3 = new Web3();
@@ -44,7 +44,7 @@ const logSubscription = {
 };
 
 const signatureProvider = new JsSignatureProvider([
-  process.env.ORACLE_EOS_PRIVATE_KEY,
+  process.env.EOS_ORACLE_PRIVATE_KEY,
 ]);
 const rpc = new JsonRpc(process.env.EOS_API_ENDPOINT, { fetch }); // required to read blockchain state
 const api = new Api({ rpc, signatureProvider }); // required to submit transactions
@@ -124,7 +124,7 @@ const received = ({ id, toAccount, chainId, quantity }) => {
 
 const amountToWaxQuantity = (tokenAmount, tokenAddress) => {
   const tokenInfo = symbolToEthAddressMap[tokenAddress];
-  const amount = tokenAmount / `1e${tokenInfo.polygonDecimals}`;
+  const amount = tokenAmount / `1e${tokenInfo.decimals}`;
   return `${amount.toFixed(4)} ${tokenInfo.account}`;
 };
 

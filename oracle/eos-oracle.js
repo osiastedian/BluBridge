@@ -3,33 +3,14 @@ import { Api, JsonRpc } from 'eosjs';
 import fetch from 'node-fetch';
 import Web3 from 'web3';
 import { createDfuseClient } from '@dfuse/client';
-// eslint-disable-next-line import/extensions
-import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig.js'; // development only
 import fs from 'fs';
 import dotenv from 'dotenv';
 import path from 'path';
 
 // eslint-disable-next-line import/extensions
+import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig.js'; // development only
+// eslint-disable-next-line import/extensions
 import symbolToEthAddressMap from './eos-token-map.js';
-
-dotenv.config();
-
-const bridgeContract = process.env.EOS_CONTRACT_ACCOUNT;
-const logsendAction = 'logsend';
-const signAction = 'sign';
-const oracleAccount = process.env.ORACLE_EOS_ACCOUNT;
-
-const web3 = new Web3(process.env.ETH_HTTP_API_ENDPOINT);
-
-const account = web3.eth.accounts.privateKeyToAccount(
-  process.env.ETH_PRIVATE_KEY
-);
-
-const signatureProvider = new JsSignatureProvider([
-  process.env.ORACLE_EOS_PRIVATE_KEY,
-]);
-const rpc = new JsonRpc(process.env.EOS_API_ENDPOINT, { fetch }); // required to read blockchain state
-const api = new Api({ rpc, signatureProvider }); // required to submit transactions
 
 global.fetch = fetch;
 global.WebSocket = WebSocket;
@@ -38,17 +19,35 @@ global.WebSocket = WebSocket;
 const LOG = console.log;
 // eslint-disable-next-line no-console
 const ERROR = console.error;
+const logsendAction = 'logsend';
+const signAction = 'sign';
+const POLYGON_CHAIN_ID = 2;
+const BSC_CHAIND_ID = 3;
+
+dotenv.config();
+
+const name = process.env.ORACLE_NAME;
+const eosContractAccount = process.env.EOS_CONTRACT_ACCOUNT;
+const eosOracle = process.env.EOS_ORACLE_ACCOUNT;
+
+const privateKeyMap = {
+  [POLYGON_CHAIN_ID]: process.env.POLYGON_ORACLE_PRIVATE_KEY,
+  [BSC_CHAIND_ID]: process.env.BSC_ORACLE_PRIVATE_KEY
+}
+const eosApiEndpoint = process.env.EOS_API_ENDPOINT;
+
+const web3 = new Web3();
+const signatureProvider = new JsSignatureProvider([
+  process.env.EOS_ORACLE_PRIVATE_KEY,
+]);
+
+const rpc = new JsonRpc(eosApiEndpoint, { fetch }); // required to read blockchain state
+const api = new Api({ rpc, signatureProvider }); // required to submit transactions
 
 const dfuseClientOptions = {
   apiKey: process.env.DFUSE_API_KEY,
   network: process.env.DFUSE_NETWORK,
 };
-
-LOG('CONFIG:', {
-  ethAddress: account.address,
-  dfuseClientOptions,
-  polygonApiEndpoint: process.env.ETH_HTTP_API_ENDPOINT,
-});
 
 const registerSignature = (id, signature) => {
   LOG(`Register Signature: ${id}, ${signature}`);
@@ -56,18 +55,18 @@ const registerSignature = (id, signature) => {
     {
       actions: [
         {
-          account: bridgeContract,
+          account: eosContractAccount,
           name: signAction,
           authorization: [
             {
-              actor: oracleAccount,
+              actor: eosOracle,
               permission: 'active',
             },
           ],
           data: {
             id,
             signature,
-            oracle_name: oracleAccount,
+            oracle_name: eosOracle,
           },
         },
       ],
@@ -103,7 +102,7 @@ const generateEthSignature = (transferData) => {
   );
   const hashed = web3.utils.sha3(encoded);
   LOG(`Generating Signature for: ${hashed}`);
-  const { signature } = account.sign(hashed);
+  const { signature } = web3.eth.accounts.sign(hashed, privateKeyMap[chainId])
   return signature;
 };
 
@@ -133,7 +132,7 @@ const streamTransfer = `subscription ($query: String!, $cursor: String, $limit: 
 
 `;
 
-const cursorPath = path.resolve(`${oracleAccount}-cursor.txt`);
+const cursorPath = path.resolve(`${eosOracle}-cursor.txt`);
 const saveCursor = (cursor) => {
   if (fs.existsSync(cursorPath)) {
     fs.rmSync(cursorPath);
@@ -143,12 +142,19 @@ const saveCursor = (cursor) => {
 
 const client = createDfuseClient(dfuseClientOptions);
 
-LOG(`Starting EOS Oracle: ${oracleAccount}`);
+LOG('Oracle Setup:', {
+  name,
+  eosOracle,
+  eosContractAccount,
+  eosApiEndpoint,
+  dfuseClientOptions,
+  symbolToEthAddressMap
+});
 let cursor = `${fs.existsSync(cursorPath) && fs.readFileSync(cursorPath)}`;
 
 client.graphql(
   streamTransfer,
-  (message, stream) => {
+  (message, stream) => {    
     if (message.type === 'error') {
       ERROR('An error occurred', message.errors, message.terminal);
       process.kill(process.pid);
@@ -191,7 +197,7 @@ client.graphql(
   },
   {
     variables: {
-      query: `receiver:${bridgeContract} action:${logsendAction}`,
+      query: `receiver:${eosContractAccount} action:${logsendAction}`,
       cursor,
       limit: 10,
       irreversibleOnly: true,
