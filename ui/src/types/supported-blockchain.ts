@@ -1,1 +1,1 @@
-export type SupportedBlockchain = 'wax' | 'polygon';
+export type SupportedBlockchain = 'wax' | 'polygon' | 'bsc';

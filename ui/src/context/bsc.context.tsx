@@ -2,17 +2,19 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 import { addPrecision } from '../services/utils.service';
 import bludacTokenAbi from '../shared/abis/BluDacToken.json';
+// TODO: recheck this ABI
 import bridgeAbi from '../shared/abis/PolygonBridge.json';
-import { PolygonMainnet } from '../shared/constants';
+import { BSCMainnet } from '../shared/constants';
+// TODO: check if this should be renamed to MetamaskTransaction
 import { PolygonTransaction } from '../shared/interfaces/polygon-transaction';
 import { useMetamask } from './metamask.context';
 
-const bluTokenContract = process.env.BLU_TOKEN_CONTRACT;
-const bluBridgeContract = process.env.BLU_BRIDGER_CONTRACT;
+const bluTokenContract = process.env.BLU_TOKEN_CONTRACT_BSC;
+const bluBridgeContract = process.env.BLU_BRIDGER_CONTRACT_BSC;
 
-export interface PolygonContextProps {
+export interface BSCContextProps {
   address: string;
-  isConnectedToPolygon: () => boolean;
+  isConnectedToBSC: () => boolean;
   connect: () => void;
   addNetwork: () => Promise<boolean>;
   fetchBalance: () => Promise<number>;
@@ -37,11 +39,11 @@ export interface PolygonContextProps {
   ) => Promise<number>;
 }
 
-const PolygonContext = createContext<Partial<PolygonContextProps>>({});
+const BSCContext = createContext<Partial<BSCContextProps>>({});
 
-export const usePolygon = () => useContext(PolygonContext);
+export const useBSC = () => useContext(BSCContext);
 
-const PolygonContextProvider: React.FC = ({ children }) => {
+const BSCContextProvider: React.FC = ({ children }) => {
   const metaMask = useMetamask();
   const [address, setAddress] = useState<string | undefined>();
 
@@ -49,13 +51,13 @@ const PolygonContextProvider: React.FC = ({ children }) => {
     metaMask.getCurrentAddress().then(setAddress);
   }, [metaMask]);
 
-  const isConnectedToPolygon = useCallback(
-    () => metaMask.isCurrentNetwork(PolygonMainnet),
+  const isConnectedToBSC = useCallback(
+    () => metaMask.isCurrentNetwork(BSCMainnet),
     [metaMask]
   );
 
   const addNetwork = () => {
-    return metaMask.addNetwork(PolygonMainnet);
+    return metaMask.addNetwork(BSCMainnet);
   };
 
   const fetchBalance = async () => {
@@ -184,19 +186,21 @@ const PolygonContextProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     if (metaMask.isInstalled) {
-      if (!isConnectedToPolygon()) {
-        metaMask.switchNetwork(PolygonMainnet);
+      if (!isConnectedToBSC()) {
+        console.log('wa');
+        // TODO: Switch to Mainnet
+        metaMask.switchNetwork(BSCMainnet);
       } else {
         connect();
       }
     }
-  }, [metaMask, connect, isConnectedToPolygon]);
+  }, [metaMask, connect, isConnectedToBSC]);
 
   return (
-    <PolygonContext.Provider
+    <BSCContext.Provider
       value={{
         address,
-        isConnectedToPolygon,
+        isConnectedToBSC,
         connect,
         addNetwork,
         fetchBalance,
@@ -206,8 +210,8 @@ const PolygonContextProvider: React.FC = ({ children }) => {
       }}
     >
       {children}
-    </PolygonContext.Provider>
+    </BSCContext.Provider>
   );
 };
 
-export default PolygonContextProvider;
+export default BSCContextProvider;

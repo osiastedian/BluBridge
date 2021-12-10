@@ -1,12 +1,13 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
+
 import useLogger, { Log } from '../hooks/useLogger';
 import { hexToPrependedZeros } from '../services/utils.service';
 import {
-  PolygonToWaxBluChainId,
-  WaxToPolygonBluChainId,
+    BSCToWaxBluChainId, PolygonToWaxBluChainId, WaxToBSCBluChainId, WaxToPolygonBluChainId
 } from '../shared/constants';
 import { SupportedBlockchain } from '../types/supported-blockchain';
-import { usePolygon } from './polygon.context';
+import { BSCContextProps, useBSC } from './bsc.context';
+import { PolygonContextProps, usePolygon } from './polygon.context';
 import { useWax } from './wax.context';
 
 interface TransferState {
@@ -19,7 +20,7 @@ interface TransferState {
 const initialState: TransferState = {
   amount: 0,
   from: 'wax',
-  to: 'polygon',
+  to: 'bsc',
   isProcessing: false,
 };
 
@@ -34,8 +35,8 @@ interface TransferContextProps {
 }
 
 const waxBluBridgerContract = process.env.EOS_BLU_BRIDGER_CONTRACT;
-const eosTokenContract = process.env.EOS_TOKEN_CONTRACT
-const eosTokenSymbol = process.env.EOS_TOKEN_SYMBOL
+const eosTokenContract = process.env.EOS_TOKEN_CONTRACT;
+const eosTokenSymbol = process.env.EOS_TOKEN_SYMBOL;
 
 const TransferContext = createContext<Partial<TransferContextProps>>({
   state: initialState,
@@ -46,12 +47,14 @@ export const useTransfer = () => useContext(TransferContext);
 const TransferContextProvider: React.FC = ({ children }) => {
   const polygon = usePolygon();
   const wax = useWax();
+  const bsc = useBSC();
   const { clearLogs, addErrorLog, addSuccessLog, addLoadingLog, logs } =
     useLogger();
 
   const connectedChains: Record<SupportedBlockchain, boolean> = {
     wax: Boolean(wax.accountName),
     polygon: Boolean(polygon.address),
+    bsc: Boolean(bsc.address),
   };
 
   const [transferState, setTransferState] =
@@ -70,61 +73,78 @@ const TransferContextProvider: React.FC = ({ children }) => {
     setTransferState((currentState) => ({ ...currentState, amount }));
   };
 
-  const transferWaxToPolygon = async () => {
+  const transferWaxToMM = async (
+    mmChain: Partial<PolygonContextProps | BSCContextProps>,
+    targetChainId: number,
+    chainName: string,
+    explorerUrl: string
+  ) => {
     const { amount } = transferState;
     try {
       addLoadingLog(
         'Waiting for approval from Wax Wallet to transfer to bridge.'
       );
-      await wax.transfer(eosTokenSymbol, eosTokenContract, waxBluBridgerContract, amount);
+      await wax.transfer(
+        eosTokenSymbol,
+        eosTokenContract,
+        waxBluBridgerContract,
+        amount
+      );
 
-      addSuccessLog(`Successfully transferred ${amount} ${eosTokenSymbol} to bridge.`);
-      addLoadingLog('Waiting for approval to transfer to Polygon');
+      addSuccessLog(
+        `Successfully transferred ${amount} ${eosTokenSymbol} to bridge.`
+      );
+      addLoadingLog(`Waiting for approval to transfer to ${chainName}`);
       const listendToLogSend = wax.listenToLogSend(wax.accountName);
       await wax.send(
         wax.accountName,
         eosTokenSymbol,
         waxBluBridgerContract,
-        WaxToPolygonBluChainId,
-        hexToPrependedZeros(polygon.address),
+        targetChainId,
+        hexToPrependedZeros(mmChain.address),
         amount
       );
       addSuccessLog(
-        `Successfully submitted transaction (Transfer ${eosTokenSymbol} to Polygon)`
+        `Successfully submitted transaction (Transfer ${eosTokenSymbol} to ${chainName})`
       );
-      addLoadingLog('Confirming Bridge to Polygon transaction.');
+      addLoadingLog(`Confirming Bridge to ${chainName} transaction.`);
       const transferId = await listendToLogSend;
       if (transferId && typeof transferId !== 'number') {
         throw 'Transaction failed. Invalid transfer ID.';
       }
       addLoadingLog('Signing transaction and confirming transaction validity.');
       const signatures = await wax.getSignatures(parseInt(transferId, 10));
-      const claimTransactionHash = await polygon.claim(
-        polygon.address,
+      const claimTransactionHash = await mmChain.claim(
+        mmChain.address,
         parseInt(transferId),
         amount,
-        WaxToPolygonBluChainId,
+        targetChainId,
         signatures
       );
       addSuccessLog(
-        `Successfully submitted transaction to claim tokens. <a href="https://polygonscan.com/tx/${claimTransactionHash}" target="_blank">View transaction</a>`
+        `Successfully submitted transaction to claim tokens. <a href="${explorerUrl}${claimTransactionHash}" target="_blank">View transaction</a>`
       );
     } catch (errorMessage) {
       addErrorLog(errorMessage);
     }
   };
 
-  const transferPolygonToWax = async () => {
+  const transferMMtoWax = async (
+    mmChain: Partial<PolygonContextProps | BSCContextProps>,
+    targetChainId: string
+  ) => {
     const { amount } = transferState;
     try {
       addLoadingLog('Waiting to approve spend amount for transaction.');
-      await polygon.approve(polygon.address, amount, 4);
+      await mmChain.approve(mmChain.address, amount, 4);
       addSuccessLog('Successfully approved spend amount for transaction.');
-      addLoadingLog(`Waiting for approval to send ${eosTokenSymbol} tokens to bridge.`);
-      const claimId = await polygon.bridgeSend(
-        polygon.address,
+      addLoadingLog(
+        `Waiting for approval to send ${eosTokenSymbol} tokens to bridge.`
+      );
+      const claimId = await mmChain.bridgeSend(
+        mmChain.address,
         wax.accountName,
-        PolygonToWaxBluChainId,
+        targetChainId,
         amount,
         4
       );
@@ -145,7 +165,10 @@ const TransferContextProvider: React.FC = ({ children }) => {
       addLoadingLog(
         'Waiting for approval to withdraw your tokens from the bridge.'
       );
-      const withdraw = await wax.withdraw(wax.accountName, waxBluBridgerContract);
+      const withdraw = await wax.withdraw(
+        wax.accountName,
+        waxBluBridgerContract
+      );
       addSuccessLog(
         `Successfully submitted transaction to withdraw tokens. <a href="https://wax.bloks.io/transaction/${withdraw.transaction_id}" target="_blank">View transaction</a>`
       );
@@ -162,10 +185,25 @@ const TransferContextProvider: React.FC = ({ children }) => {
     }));
     const { from, to } = transferState;
     if (from === 'wax' && to === 'polygon') {
-      await transferWaxToPolygon();
+      await transferWaxToMM(
+        polygon,
+        WaxToPolygonBluChainId,
+        'Polygon',
+        'https://polygonscan.com/tx/'
+      );
     } else if (from === 'polygon' && to === 'wax') {
-      await transferPolygonToWax();
+      await transferMMtoWax(polygon, PolygonToWaxBluChainId);
+    } else if (from === 'wax' && to === 'bsc') {
+      await transferWaxToMM(
+        bsc,
+        WaxToBSCBluChainId,
+        'Smart Chain',
+        'https://bscscan.com/tx/'
+      );
+    } else if (from === 'bsc' && to === 'wax') {
+      await transferMMtoWax(bsc, BSCToWaxBluChainId);
     }
+
     setTransferState((currentState) => ({
       ...currentState,
       isProcessing: false,
@@ -180,7 +218,10 @@ const TransferContextProvider: React.FC = ({ children }) => {
     if (from === 'polygon') {
       return polygon.fetchBalance();
     }
-  }, [wax, polygon, transferState]);
+    if (from === 'bsc') {
+      return bsc.fetchBalance();
+    }
+  }, [wax, polygon, bsc, transferState]);
 
   return (
     <TransferContext.Provider

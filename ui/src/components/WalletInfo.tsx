@@ -1,4 +1,5 @@
 import { SupportedBlockchain } from '../types/supported-blockchain';
+import BSCConnector from './bsc.connector';
 import PolygonConnector from './polygon.connector';
 import WaxConnector from './wax.connector';
 
@@ -14,6 +15,8 @@ const WalletInfo: React.FC<WalletProps> = ({ label, chain }) => {
     connector = <WaxConnector />;
   } else if (chain === 'polygon') {
     connector = <PolygonConnector />;
+  } else if (chain === 'bsc') {
+    connector = <BSCConnector />;
   }
 
   return (
