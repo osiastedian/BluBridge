@@ -2,8 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 import { addPrecision } from '../services/utils.service';
 import bludacTokenAbi from '../shared/abis/BluDacToken.json';
-// TODO: recheck this ABI
-import bridgeAbi from '../shared/abis/PolygonBridge.json';
+import bridgeAbi from '../shared/abis/BluDacTokenBridge.json';
 import { BSCMainnet } from '../shared/constants';
 // TODO: check if this should be renamed to MetamaskTransaction
 import { PolygonTransaction } from '../shared/interfaces/polygon-transaction';
@@ -188,7 +187,6 @@ const BSCContextProvider: React.FC = ({ children }) => {
     if (metaMask.isInstalled) {
       if (!isConnectedToBSC()) {
         console.log('wa');
-        // TODO: Switch to Mainnet
         metaMask.switchNetwork(BSCMainnet);
       } else {
         connect();

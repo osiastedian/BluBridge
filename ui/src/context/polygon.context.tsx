@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 import { addPrecision } from '../services/utils.service';
 import bludacTokenAbi from '../shared/abis/BluDacToken.json';
-import bridgeAbi from '../shared/abis/PolygonBridge.json';
+import bridgeAbi from '../shared/abis/BluDacTokenBridge.json';
 import { PolygonMainnet } from '../shared/constants';
 import { PolygonTransaction } from '../shared/interfaces/polygon-transaction';
 import { useMetamask } from './metamask.context';

@@ -51,7 +51,6 @@ export default function BSCConnector() {
       {!showMetamaskMissing && showNotConnectedToBSC && (
         <ConnectToNetworkModal
           onHide={() => setShowNotConnectedToBSC(false)}
-          // TODO: change to mainnet
           targetNetwork={BSCMainnet.chainName}
           addNetwork={() => {
             addNetwork().then(() => setShowNotConnectedToBSC(false));
