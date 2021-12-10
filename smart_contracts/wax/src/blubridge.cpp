@@ -11,15 +11,23 @@ blubridge::blubridge( eosio::name s, eosio::name code, datastream<const char *> 
 	balances_(get_self(), get_self().value),
 	receive_(get_self(), get_self().value),
 	state_(get_self(), get_self().value),
+	rate_(get_self(), get_self().value),
 	transferdata_(get_self(), get_self().value)
-{}
+{
+	if( !state_.exists()){
+		state_type state( get_self(), get_self().value);
+		state.set( {true}, get_self() );
+	}
+
+	if( !rate_.exists()){
+		burn_type rate( get_self(), get_self().value);
+		rate.set( { 20 }, get_self() );
+	}
+}
 
 void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id, eosio::checksum256 eth_address) {
  
-	if( state_.get().is_paused ) {
-		print_f("EARL_DEBUG, state is paused");
-		return ;
-	}
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
 
     require_auth(from);
 
@@ -40,9 +48,9 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
 	// End of cross check logic
 	
 	//TODO: check burn rate
-	uint8_t burnRate = 20;
-	uint64_t maxPercentage = 100;
-	auto modifiedAmount = (quantity * (maxPercentage - burnRate) ) / maxPercentage;
+	auto burnRate = rate_.get().burn_rate;
+	auto burnedAmount = (quantity * (burnRate / 100)) ;
+	auto modifiedAmount = quantity - burnedAmount;
 	print_f("EARL_DEBUG modified amount [%]", modifiedAmount );
 	
 
@@ -59,6 +67,13 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
         t.claimed = false;
     });
 
+	//TODO: transfer to bludacburned
+	action(
+		permission_level{ get_self(), "active"_n },
+		tokencontract, "transfer"_n,
+		std::make_tuple( "bludacburned"_n, from, item->quantity, string("Blubridge withdraw"))
+	).send();
+
     action(
         permission_level{get_self(), "active"_n},
         get_self(), "logsend"_n,
@@ -69,7 +84,8 @@ void blubridge::send( eosio::name from, eosio::asset quantity, uint8_t chain_id,
 
 void blubridge::sign( eosio::name oracle_name, uint64_t id, std::string signature ) {
 
-	require_oracle(oracle_name);
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
+	require_auth( permission_level(oracle_name, oracle_permission) );
 
 	auto blu = transferdata_.find(id);
 	check(blu != transferdata_.end(), "Send item not found");
@@ -87,6 +103,7 @@ void blubridge::sign( eosio::name oracle_name, uint64_t id, std::string signatur
 
 void blubridge::regoracle( eosio::name oracle_name ){
 	
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
 	require_auth( get_self() );
     check( is_account(oracle_name), "Oracle account does not exist");
 
@@ -101,6 +118,7 @@ void blubridge::regoracle( eosio::name oracle_name ){
 
 void blubridge::unregoracle( eosio::name oracle_name ){
 
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
 	require_auth( get_self() );
 
     auto oracle = oracles_.find(oracle_name.value);
@@ -111,6 +129,7 @@ void blubridge::unregoracle( eosio::name oracle_name ){
 
 void blubridge::logsend(uint64_t id, uint32_t timestamp, name from, asset quantity, uint8_t chain_id, checksum256 eth_address) {
     // Logs the send id for the oracle to listen to
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
     require_auth(get_self());
 
 	auto item = balances_.find( from.value );
@@ -122,7 +141,9 @@ void blubridge::logsend(uint64_t id, uint32_t timestamp, name from, asset quanti
 }
 
 void blubridge::claimed(name oracle_name, uint64_t id, checksum256 to_eth, asset quantity) {
-    require_oracle(oracle_name);
+
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
+	require_auth( permission_level(oracle_name, oracle_permission) );
 
     auto item = transferdata_.find(id);
     check(item != transferdata_.end(), "Data is not found");
@@ -136,9 +157,10 @@ void blubridge::claimed(name oracle_name, uint64_t id, checksum256 to_eth, asset
 	});
 }
 
-void blubridge::regchainid( uint8_t chain_id, std::string memo ){
-	
-	require_auth( get_self() );
+void blubridge::regchainid( uint8_t chain_id, std::string memo, eosio::name account ){
+
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
+	require_auth( permission_level(account, admin_permission) );
 
     auto chain = chains_.find( chain_id );
     check(chain == chains_.end(), "Chain ID is already added");
@@ -149,9 +171,10 @@ void blubridge::regchainid( uint8_t chain_id, std::string memo ){
     });
 }
 
-void blubridge::unregchainid( uint8_t chain_id ){
+void blubridge::unregchainid( uint8_t chain_id, eosio::name account ){
 	
-	require_auth( get_self() );
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
+	require_auth( permission_level( account, admin_permission ) );
 
     auto chain = chains_.find( chain_id );
     check(chain != chains_.end(), "Chain ID is not added");
@@ -160,9 +183,10 @@ void blubridge::unregchainid( uint8_t chain_id ){
 
 }
 
-void blubridge::regsymbol(eosio::asset quantity){
+void blubridge::regsymbol(eosio::asset quantity, eosio::name account){
 	
-	require_auth( get_self() );
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
+	require_auth( permission_level( account, admin_permission ) );
 	auto sym = quantity.symbol;
     check(sym.is_valid(), "Invalid symbol name");
 
@@ -174,9 +198,10 @@ void blubridge::regsymbol(eosio::asset quantity){
     });
 }
 
-void blubridge::unregsymbol(eosio::asset quantity){
+void blubridge::unregsymbol(eosio::asset quantity, eosio::name account){
 	
-	require_auth( get_self() );
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
+	require_auth( permission_level( account, admin_permission ) );
 	auto sym = quantity.symbol;
     check(sym.is_valid(), "Invalid symbol name");
 
@@ -188,8 +213,8 @@ void blubridge::unregsymbol(eosio::asset quantity){
 
 void blubridge::received( uint64_t id, name to_account, uint8_t chain_id,  asset quantity, name oracle_name){
 
-	require_auth( oracle_name );
-    require_oracle( oracle_name );
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
+	require_auth( permission_level(oracle_name, oracle_permission) );
 
     check(quantity.is_valid(), "Amount is not valid");
     check(quantity.amount > 0, "Amount cannot be negative");
@@ -225,6 +250,7 @@ void blubridge::received( uint64_t id, name to_account, uint8_t chain_id,  asset
 
 void blubridge::claim( name from, uint64_t id ){
 
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
 	require_auth( from );
 
     auto item = receive_.find(id);
@@ -241,9 +267,9 @@ void blubridge::claim( name from, uint64_t id ){
 	});
 
 	//TODO: check burn rate
-	uint8_t burnRate = 20;
-	uint64_t maxPercentage = 100;
-	auto modifiedAmount = (item->quantity * (maxPercentage - burnRate) ) / maxPercentage;
+	auto burnRate = rate_.get().burn_rate;
+	auto burnedAmount = (item->quantity * (burnRate / 100)) ;
+	auto modifiedAmount = item->quantity - burnedAmount;
 	print_f("EARL_DEBUG modified amount [%]", modifiedAmount );
 
 	//Get structure individual item 
@@ -270,6 +296,7 @@ void blubridge::claim( name from, uint64_t id ){
 
 void blubridge::withdraw( eosio::name from ) {
 
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
     require_auth(from);
 
 	// Start of cross check logic
@@ -292,7 +319,7 @@ void blubridge::withdraw( eosio::name from ) {
 
 void blubridge::on_token_transfer( eosio::name from, eosio::name to, eosio::asset quantity, std::string memo ){
 
-
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
 	if( to != get_self() ) return;
 
 	//Get structure individual item 
@@ -328,6 +355,7 @@ void blubridge::require_oracle( eosio::name account) {
 
 void blubridge::cancel( name from, uint64_t id ){
 
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
 	require_auth( from );
 
     auto item = transferdata_.find(id);
@@ -337,16 +365,16 @@ void blubridge::cancel( name from, uint64_t id ){
 
     uint32_t now = current_time_point().sec_since_epoch();
 	auto time_diff = now - item->time;
-	check( time_diff > 604800, "Cannot cancel, need 7 days for transaction to be cancelled" );
+	check( time_diff > SEVEN_DAYS, "Cannot cancel, need 7 days for transaction to be cancelled" );
 
 	transferdata_.erase(item);
 }
 
-void blubridge::pause(){
+void blubridge::pause( name account ){
 
+	require_auth( permission_level(account, admin_permission) );
 	check( state_.exists(), "Not yet initialized");
-	// state_type state( get_self(), get_self().value);
-	// state.set( {true}, get_self() );
+
 	auto st = state_.get();
 	st.is_paused = true;
 
@@ -355,8 +383,9 @@ void blubridge::pause(){
 
 }
 
-void blubridge::unpause(){
+void blubridge::unpause( name account ){
 
+	require_auth( permission_level(account, admin_permission) );
 	check( state_.exists(), "Not yet initialized");
 
 	auto st = state_.get();
@@ -365,6 +394,18 @@ void blubridge::unpause(){
 	state_.set(st, get_self());
 	print_f("setting state to false ");
 
+}
+
+void blubridge::setburnrate( name account, uint8_t rate ){
+
+	check( !state_.get().is_paused, "State is paused. Cannot continue" );
+	require_auth( permission_level(account, admin_permission) );
+	check( rate_.exists(), "Not yet initialized");
+
+	auto rt = rate_.get();
+	rt.burn_rate = rate;
+
+	rate_.set(rt, get_self());
 }
 
 void blubridge::dbgtime(uint64_t id, uint32_t time_modify ) {
@@ -376,3 +417,4 @@ void blubridge::dbgtime(uint64_t id, uint32_t time_modify ) {
 		t.time = time_modify;
 	});
 }
+// EOSIO_DISPATCH( blu::blubridge, (regoracle)(unregoracle)(send)(sign)(logsend)(claimed)(regchainid)(unregchainid)(regsymbol)(unregsymbol)(received)(claim)(withdraw)(cancel)(pause)(unpause)(dbgtime))

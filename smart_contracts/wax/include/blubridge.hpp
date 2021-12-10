@@ -19,9 +19,12 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		/* 
 		 *	Definition of constants used in smart contract
 		 */
-		static constexpr uint8_t ORACLE_CONFIRMATIONS = 2;
-		static constexpr uint8_t CONTRACT_CHAIN_ID = 1;
+		static constexpr uint8_t  ORACLE_CONFIRMATIONS = 2;
+		static constexpr uint8_t  CONTRACT_CHAIN_ID = 1;
+		static constexpr uint32_t SEVEN_DAYS = 604800;
 		const eosio::name tokencontract { "eosio.token"_n }; 
+		const eosio::name oracle_permission { "oracleperm"_n };
+		const eosio::name admin_permission { "adminperm"_n };
 
 		/* 
 		 * Description: 
@@ -188,25 +191,25 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		/* 
 		 *	Action to register chain ID
 		 */
-		[[eosio::action]] void regchainid(uint8_t id, std::string memo);
+		[[eosio::action]] void regchainid( uint8_t chain_id, std::string memo, eosio::name account );
 		 using regchainid_action = eosio::action_wrapper<"regchainid"_n, &blubridge::regchainid>;
 
 		/* 
 		 *	Action to unregister chain ID
 		 */
-		[[eosio::action]] void unregchainid(uint8_t id);
+		[[eosio::action]] void unregchainid(uint8_t id, eosio::name account);
 		 using unregchainid_action = eosio::action_wrapper<"unregchainid"_n, &blubridge::unregchainid>;
 
 		/* 
 		 *	Action to register symbol
 		 */
-		[[eosio::action]] void regsymbol(eosio::asset quantity);
+		[[eosio::action]] void regsymbol(eosio::asset quantity, eosio::name account);
 		 using regsymbol_action = eosio::action_wrapper<"regsymbol"_n, &blubridge::regsymbol>;
 
 		/* 
 		 *	Action to unregister symbol
 		 */
-		[[eosio::action]] void unregsymbol(eosio::asset quantity);
+		[[eosio::action]] void unregsymbol(eosio::asset quantity, eosio::name account);
 		 using unregsymbol_action = eosio::action_wrapper<"unregsymbol"_n, &blubridge::unregsymbol>;
 
 		/* 
@@ -252,14 +255,24 @@ class [[eosio::contract("blubridge")]] blubridge : public eosio::contract {
 		typedef eosio::singleton<"states"_n, state_item> state_type;
 		state_type     state_;
 
-		[[eosio::action]] void pause();
+		[[eosio::action]] void pause( eosio::name account );
 		 using pause_action = eosio::action_wrapper<"pause"_n, &blubridge::pause>;
 
-		[[eosio::action]] void unpause();
+		[[eosio::action]] void unpause( eosio::name account );
 		 using unpause_action = eosio::action_wrapper<"unpause"_n, &blubridge::unpause>;
 
 		[[eosio::action]] void dbgtime(uint64_t id, uint32_t time_modify );
 		 using dbgchangetime_action = eosio::action_wrapper<"dbgtime"_n, &blubridge::dbgtime>;
+
+		struct [[eosio::table("burnrate")]] burn_item {
+			uint8_t burn_rate;
+		};
+
+		typedef eosio::singleton<"burnrate"_n, burn_item> burn_type;
+		burn_type     rate_;
+
+		[[eosio::action]] void setburnrate( eosio::name account, uint8_t rate );
+		 using setburnrate_action = eosio::action_wrapper<"setburnrate"_n, &blubridge::setburnrate>;
 
 		/* 
 		 * Notification function listening to specified smart contract in annotation

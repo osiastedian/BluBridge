@@ -52,6 +52,17 @@ cleos set contract blubridge ../build/blubridge/
 public_key_admin1=$( cleos wallet create_key | awk '{print $10}' | sed 's/\"//g' )
 cleos create account eosio admin1 ${public_key_admin1}
 
+echo -e "${GREEN}Start creating adminperm permission for admin1 account${END}"
+cleos set account permission admin1 adminperm  ${public_key_admin1} owner -p admin1@owner
+cleos set action permission admin1 blubridge regchainid adminperm
+cleos set action permission admin1 blubridge unregchainid adminperm
+cleos set action permission admin1 blubridge pause adminperm
+cleos set action permission admin1 blubridge unpause adminperm
+cleos set action permission admin1 blubridge regsymbol adminperm
+cleos set action permission admin1 blubridge unregsymbol adminperm
+cleos set action permission admin1 blubridge setburnrate adminperm
+
+
 echo -e "${GREEN}set eosio.code permission to account blubridge${END}"						 #Setting of additional permission to 
 #TODO: removed add code permission
 cleos set account permission blubridge active --add-code -p blubridge@active #blubridge account ( eosio.code )
@@ -74,8 +85,8 @@ echo -e "${GREEN}transfer initial amount of 1000000 to blubridge account${END}"
 cleos push action eosio.token transfer '["eosio.token","blubridge", "100000 BLU", "Test transfer"]' -p eosio.token@active
 
 
-cleos push action blubridge regchainid '["1234", "initial"]' -p blubridge@active
-cleos push action blubridge  regsymbol '["1 BLU"]' -p blubridge@active
+cleos push action blubridge regchainid '["1234", "initial", "admin1"]' -p admin1@adminperm
+cleos push action blubridge  regsymbol '["1 BLU", "admin1"]' -p admin1@adminperm 
 
 
 #  blubridge inline transfer test 
@@ -86,12 +97,11 @@ cleos create account eosio keanne ${public_key_keanne}
 echo -e "${GREEN}transfer initial amount of 1000 to keanne account${END}"
 cleos push action eosio.token transfer '["eosio.token","keanne", "1000 BLU", "Initial amount given to Keanne account"]' -p eosio.token@active
 
-echo -e "${GREEN}Test transfer from bluebridge to eosio.token${END}"
-cleos push action blubridge regchainid '["1234", "initial chain id"]' -p admin1@active
+echo -e "${GREEN}Registering chain_id 1234...${END}"
+cleos push action blubridge regchainid '["1234", "initial chain id", "admin1"]' -p admin1@adminperm
 
-echo -e "${GREEN}register token symbol to smart contract ${END}"
-cleos push action blubridge regsymbol '["1 BLU", "initial register"]' -p admin1@active
-
+echo -e "${GREEN}Registering token symbol...${END}"
+cleos push action blubridge regsymbol '["1 BLU", "initial register", "admin1"]' -p admin1@adminperm
 
 echo -e "${GREEN}Test transfer from bluebridge to eosio.token${END}"
 cleos push action blubridge send '["keanne","1 BLU", "1234", "1234"]' -p keanne@active
@@ -104,24 +114,16 @@ cleos push action blubridge send '["keanne","1 BLU", "1234", "1234"]' -p keanne@
 public_key_oracle=$( cleos wallet create_key | awk '{print $10}' | sed 's/\"//g' )
 cleos create account eosio oracle1 ${public_key_oracle}
 
-echo -e "${GREEN}Start registering oracle account into smart contract${END}"
-cleos push action blubridge regoracle '["oracle1"]' blubridge@active
+echo -e "${GREEN}Start creating oralceperm permission for oracle1 account${END}"
+cleos set account permission oracle1 oracleperm  ${public_key_oracle} owner -p oracle1@owner
+cleos set action permission oracle1 blubridge sign oracleperm
 
 public_key_oracle2=$( cleos wallet create_key | awk '{print $10}' | sed 's/\"//g' )
 cleos create account eosio oracle2 ${public_key_oracle2}
 
-echo -e "${GREEN}Start registering oracle account into smart contract${END}"
-cleos push action blubridge regoracle '["oracle2"]' blubridge@active
-
-
-echo -e "${GREEN}Start creating oralceperm permission for oracle1 account${END}"
-cleos set account permission oracle1 oracleperm  ${public_key2} owner -p oracle1@owner
-cleos set action permission oracle1 blubridge sign oracleperm
-
 echo -e "${GREEN}Start creating oralceperm permission for oracle2 account${END}"
-cleos set account permission oracle2 oracleperm  ${public_key2} owner -p oracle2@owner
+cleos set account permission oracle2 oracleperm  ${public_key_oracle2} owner -p oracle2@owner
 cleos set action permission oracle2 blubridge sign oracleperm
-
 
 # Sign transaction using oracle
 cleos push action blubridge sign '["oracle1", "1", "0xc5deb96bb278a02e8d374649e4a4ef661c77c65abeaa484510c4c3a29b8360e0232a0e869191a77766b0473eb28029d63ae7bd20fd820efa9c2c892b0d1cfb661b"]' -p oracle1@oracleperm

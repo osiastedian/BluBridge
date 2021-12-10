@@ -1,0 +1,2 @@
+cleos set account permission oracle1 oracleperm EOS5Cmt6zpJBfXqGo3uSWjdEWsHTQAK5cjCqjx6sWs2VodBCvcAgZ owner -p oracle1@owner
+cleos set action permission oracle1 blubridge sign  oracleperm

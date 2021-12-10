@@ -64,6 +64,16 @@
             ]
         },
         {
+            "name": "burn_item",
+            "base": "",
+            "fields": [
+                {
+                    "name": "burn_rate",
+                    "type": "uint8"
+                }
+            ]
+        },
+        {
             "name": "cancel",
             "base": "",
             "fields": [
@@ -184,7 +194,12 @@
         {
             "name": "pause",
             "base": "",
-            "fields": []
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                }
+            ]
         },
         {
             "name": "receive_item",
@@ -247,12 +262,16 @@
             "base": "",
             "fields": [
                 {
-                    "name": "id",
+                    "name": "chain_id",
                     "type": "uint8"
                 },
                 {
                     "name": "memo",
                     "type": "string"
+                },
+                {
+                    "name": "account",
+                    "type": "name"
                 }
             ]
         },
@@ -273,6 +292,10 @@
                 {
                     "name": "quantity",
                     "type": "asset"
+                },
+                {
+                    "name": "account",
+                    "type": "name"
                 }
             ]
         },
@@ -295,6 +318,20 @@
                 {
                     "name": "eth_address",
                     "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "setburnrate",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "rate",
+                    "type": "uint8"
                 }
             ]
         },
@@ -339,7 +376,12 @@
         {
             "name": "unpause",
             "base": "",
-            "fields": []
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                }
+            ]
         },
         {
             "name": "unregchainid",
@@ -348,6 +390,10 @@
                 {
                     "name": "id",
                     "type": "uint8"
+                },
+                {
+                    "name": "account",
+                    "type": "name"
                 }
             ]
         },
@@ -368,6 +414,10 @@
                 {
                     "name": "quantity",
                     "type": "asset"
+                },
+                {
+                    "name": "account",
+                    "type": "name"
                 }
             ]
         },
@@ -439,6 +489,11 @@
             "ricardian_contract": ""
         },
         {
+            "name": "setburnrate",
+            "type": "setburnrate",
+            "ricardian_contract": ""
+        },
+        {
             "name": "sign",
             "type": "sign",
             "ricardian_contract": ""
@@ -473,6 +528,13 @@
         {
             "name": "balances",
             "type": "balance_item",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "burnrate",
+            "type": "burn_item",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
